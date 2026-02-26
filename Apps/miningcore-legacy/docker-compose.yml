@@ -10,6 +10,10 @@ services:
       - /media/ZimaOS-HD/vtc:/.vertcoin
     ports:
       - "4001:4001"
+      - "6101-6115:6101-6115"
+      - "6501-6515:6501-6515"
+      - "6601-6615:6601-6615"
+      - "6701-6715:6701-6715"
 x-casaos:
   architectures:
     - amd64
