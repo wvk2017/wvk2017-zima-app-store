@@ -1,4 +1,4 @@
-name: monero
+name: monerowallet
 services:
   app:
     container_name: xmr_wallet
