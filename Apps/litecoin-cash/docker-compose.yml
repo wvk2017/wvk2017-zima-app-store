@@ -1,0 +1,28 @@
+name: retro-mike-litecoincash-sha256
+services:
+  app:
+    container_name: lcc_sha256
+    image: theretromike/nodes:litecoincash
+    restart: always
+    volumes:
+      - /media/ZimaOS-HD/lcc:/root/.litecoincash
+    ports:
+      - "7018:7018"
+      - "9018:9018"
+    command: "/usr/bin/litecoincashd -printtoconsole -server -prune=550 -wallet=default -zmqpubhashblock=tcp://127.0.0.1:7018 -rpcbind=0.0.0.0 -rpcport=9018 -rpcallowip=0.0.0.0/0 -rpcuser=pooluser -rpcpassword=poolpassword -powalgo=sha256d"
+x-casaos:
+  architectures:
+    - amd64
+  main: app
+  description:
+    en_us: Litecoin Cash (SHA256) Cryptocurrency Node. Can be used in conjunction with Miningcore Apps to solo mine.
+  tagline:
+    en_us: Litecoin Cash (SHA256) Cryptocurrency Node.
+  developer: Retro Mike
+  author: Retro Mike
+  icon: https://miningpoolstats.stream/ico/litecoincash.webp
+  thumbnail: ""
+  title:
+    en_us: Litecoin Cash (SHA256) Cryptocurrency Node
+  category: RetroMike
+  port_map: "8888"
