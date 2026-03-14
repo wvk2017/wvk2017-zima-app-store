@@ -1,0 +1,28 @@
+name: retro-mike-litecoincash-minotaurx
+services:
+  app:
+    container_name: lcc_minotaurx
+    image: theretromike/nodes:litecoincash
+    restart: always
+    volumes:
+      - /media/ZimaOS-HD/lcc:/root/.litecoincash
+    ports:
+      - "7019:7019"
+      - "9019:9019"
+    command: "/usr/bin/litecoincashd -printtoconsole -server -prune=550 -wallet=default -zmqpubhashblock=tcp://127.0.0.1:7019 -rpcbind=0.0.0.0 -rpcport=9019 -rpcallowip=0.0.0.0/0 -rpcuser=pooluser -rpcpassword=poolpassword -powalgo=minotaurx"
+x-casaos:
+  architectures:
+    - amd64
+  main: app
+  description:
+    en_us: Litecoin Cash (MinotaurX) Cryptocurrency Node. Can be used in conjunction with Miningcore Apps to solo mine.
+  tagline:
+    en_us: Litecoin Cash (MinotaurX) Cryptocurrency Node.
+  developer: Retro Mike
+  author: Retro Mike
+  icon: https://miningpoolstats.stream/ico/litecoincash.webp
+  thumbnail: ""
+  title:
+    en_us: Litecoin Cash (MinotaurX) Cryptocurrency Node
+  category: RetroMike
+  port_map: "8888"
