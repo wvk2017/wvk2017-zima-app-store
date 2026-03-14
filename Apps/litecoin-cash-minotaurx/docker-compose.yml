@@ -5,7 +5,7 @@ services:
     image: theretromike/nodes:litecoincash
     restart: always
     volumes:
-      - /media/ZimaOS-HD/lcc:/root/.litecoincash
+      - /media/ZimaOS-HD/lcc2:/root/.litecoincash
     ports:
       - "7019:7019"
       - "9019:9019"
