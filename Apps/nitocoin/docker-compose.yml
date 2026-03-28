@@ -2,7 +2,7 @@ name: retro-mike-nitocoin
 services:
   app:
     container_name: nito
-    image: theretromike/nodes:nitocoin
+    image: theretromike/nodes:nito
     restart: always
     volumes:
       - /media/ZimaOS-HD/nito:/root/.nito
