@@ -2,7 +2,7 @@ name: miningcore
 services:
   app:
     container_name: miningcore
-    image: theretromike/miningcore:latest
+    image: wvk2017/miningcore:latest
     restart: always
     volumes:
       - /media/ZimaOS-HD/miningcore/coins.json:/app/build/coins.json
@@ -22,11 +22,11 @@ x-casaos:
     en_us: Miningcore Mining Pool App.
   tagline:
     en_us: Miningcore Mining Pool App.
-  developer: Retro Mike
-  author: Retro Mike
+  developer: wvk2017
+  author: wvk2017
   icon: https://raw.githubusercontent.com/oliverw/miningcore/master/logo.png
   thumbnail: ""
   title:
     en_us: Miningcore
-  category: RetroMike
+  category: wvk2017
   port_map: "8888"
