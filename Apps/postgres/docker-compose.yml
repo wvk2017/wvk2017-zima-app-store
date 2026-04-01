@@ -1,4 +1,4 @@
-name: retro-mike-postgresql
+name: wvk2017-postgresql
 services:
   app:
     container_name: postgresql
@@ -25,11 +25,11 @@ x-casaos:
     en_us: Postgresql Database Engine
   tagline:
     en_us: Postgresql Database Engine
-  developer: Retro Mike
-  author: Retro Mike
+  developer: wvk2017
+  author: wvk2017
   icon: https://cdn.jsdelivr.net/gh/IceWhaleTech/CasaOS-AppStore@main/Apps/PostgreSQL/icon.png
   thumbnail: ""
   title:
     en_us: Postgresql
-  category: RetroMike
+  category: wvk2017
   port_map: "8888"
