@@ -1,8 +1,8 @@
-name: retro-mike-miningcore-webui
+name: wvk2017-miningcore-webui
 services:
   app:
     container_name: miningcorewebui
-    image: theretromike/miningcorewebui:latest
+    image: wvk2017/miningcorewebui:latest
     restart: always
     volumes:
       - /media/ZimaOS-HD/miningcore:/app/miningcore
@@ -27,12 +27,12 @@ x-casaos:
     en_us: Miningcore Web UI
   tagline:
     en_us: Miningcore Web UI
-  developer: Retro Mike
-  author: Retro Mike
+  developer: wvk2017
+  author: wvk2017
   icon: https://raw.githubusercontent.com/TheRetroMike/retromike-umbrel-app-store/master/retro-mike-miningcore-webui/webui.png
   thumbnail: ""
-  store_app_id: retro-mike-miningcore-webui
+  store_app_id: wvk2017-miningcore-webui
   title:
     en_us: Miningcore Web UI
-  category: RetroMike
+  category: wvk2017
   port_map: "81"
