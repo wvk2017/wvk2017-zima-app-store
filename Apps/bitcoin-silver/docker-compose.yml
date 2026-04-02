@@ -1,8 +1,8 @@
-name: retro-mike-bitcoin-silver
+name: wvk2017-silver
 services:
   app:
     container_name: btcs
-    image: theretromike/nodes:bitcoinsilver
+    image: wvk2017/nodes:bitcoinsilver
     restart: always
     volumes:
       - /media/ZimaOS-HD/btcs:/root/.bitcoinsilver
@@ -18,11 +18,11 @@ x-casaos:
     en_us: Bitcoin Silver Cryptocurrency Node. Can be used in conjunction with Miningcore Apps to solo mine.
   tagline:
     en_us: Bitcoin Silver Cryptocurrency Node.
-  developer: Retro Mike
-  author: Retro Mike
+  developer: Wvk2017
+  author: Wvk2017
   icon: https://avatars.githubusercontent.com/u/185931597?s=200&v=4
   thumbnail: ""
   title:
     en_us: Bitcoin Silver (BTCS) Node
-  category: RetroMike
+  category: Wvk2017
   port_map: "8888"
