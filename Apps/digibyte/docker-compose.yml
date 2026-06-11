@@ -2,7 +2,7 @@ name: retro-mike-digibyte
 services:
   app:
     container_name: dgb
-    image: theretromike/nodes:digibyte
+    image: wvk2017/nodes:digibyte
     restart: always
     volumes:
       # Mounting docker.sock to allow docker management via the container
