@@ -33,7 +33,7 @@ x-casaos:
     - amd64
   main: app
   description:
-    en_us: Digibyte Cryptocurrency Node. Can be used in conjunction with Miningcore Apps to solo mine.
+    en_us: wvk2017 Digibyte Cryptocurrency Node. Can be used in conjunction with Miningcore Apps to solo mine.
   tagline:
     en_us: Digibyte Cryptocurrency Node.
   developer: Retro Mike
