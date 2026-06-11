@@ -1,0 +1,46 @@
+name: retro-mike-bitcoin-sv
+services:
+  app:
+    container_name: btcsv
+    image: theretromike/nodes:bitcoinsv
+    restart: always
+    volumes:
+      # Mounting docker.sock to allow docker management via the container
+      - /media/ZimaOS-HD/NodeData/bitcoinsv:/root/.bitcoin
+    ports:
+      - "9005:9005 "
+      - "7005:7005"
+      - "8335:8335"
+    command: "/usr/bin/bitcoind -printtoconsole -server -prune=550 -wallet=default -zmqpubhashblock=tcp://127.0.0.1:7005 -rpcbind=0.0.0.0 -rpcport=9005 -rpcallowip=0.0.0.0/0 -port=8335 -rpcuser=pooluser -rpcpassword=poolpassword -maxmempool=10000 -maxsigcachesize=250 -maxscriptcachesize=250 -maxorphantx=10000 -maxstackmemoryusageconsensus=1000000000 -excessiveblocksize=10000000000 -minminingtxfee=0.00000500"
+    x-casaos:
+      volumes:
+        - container: /root/.bitcoin
+          description:
+            en_us: 'Container Path: /root/.bitcoin'
+      ports:
+        - container: "9005"
+          description:
+            en_us: 'Container Port: 9005'
+        - container: "7005"
+          description:
+            en_us: 'Container Port: 7005'
+        - container: "8335"
+          description:
+            en_us: 'Container Port: 8335'
+x-casaos:
+  architectures:
+    - amd64
+  main: app
+  description:
+    en_us: Bitcoin Sv Cryptocurrency Node. Can be used in conjunction with Miningcore Apps to solo mine.
+  tagline:
+    en_us: Bitcoin Cash Cryptocurrency Node.
+  developer: Retro Mike
+  author: Retro Mike
+  icon: https://cryptologos.cc/logos/bitcoin-sv-bsv-logo.png
+  thumbnail: ""
+  # Title for the application
+  title:
+    en_us: Bitcoin Sv (BTC SV) Node
+  category: RetroMike
+  port_map: "8888"
