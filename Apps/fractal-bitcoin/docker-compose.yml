@@ -9,7 +9,7 @@ services:
     ports:
       - "7030:7030"
       - "9030:9030"
-    command: "/usr/bin/bitcoind -printtoconsole -server -server=1 -txindex=0 -listen=1 -discover=1 -maxconnections=256 -dnsseed=1 -fixedseeds=1 -forcednsseed=1 -prune=10000 -wallet=default -zmqpubhashblock=tcp://127.0.0.1:7030 -rpcbind=0.0.0.0 -rpcport=9030 -rpcallowip=0.0.0.0/0 -rpcuser=pooluser -rpcpassword=poolpassword -addnode=dnsseed-mainnet.unisat.io -addnode=dnsseed-mainnet.fractalbitcoin.io"
+    command: "/usr/bin/bitcoind -printtoconsole -server -maxconnections=256 -prune=10000 -wallet=default -zmqpubhashblock=tcp://127.0.0.1:7030 -rpcbind=0.0.0.0 -rpcport=9030 -rpcallowip=0.0.0.0/0 -rpcuser=pooluser -rpcpassword=poolpassword -addnode=dnsseed-mainnet.unisat.io -addnode=dnsseed-mainnet.fractalbitcoin.io"
 x-casaos:
   architectures:
     - amd64
@@ -20,7 +20,7 @@ x-casaos:
     en_us: fractal-bitcoin (FB) Cryptocurrency Node.
   developer: wvk2017
   author: wvk2017
-  icon: https://miningpoolstats.stream/ico/fractalbitcoin.webp
+  icon: https://images.cryptorank.io/coins/fractal_bitcoin1723803513675.png
   thumbnail: ""
   title:
     en_us: fractal-bitcoin (FB) Cryptocurrency Node
