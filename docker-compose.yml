@@ -158,9 +158,8 @@ services:
       APP_HOST: fractald
       APP_PORT: 3000
       JWT_SECRET: "ChangeThisToARandomStringForProxySecurity"
-        ports:
-      - "8384:3000" # Web UI Dashboard mapping (Access via http://192.168.2.15:8384)
+    ports:
+      - "3000:3000"
     depends_on:
       - fractald
-      - ckpool
-        
+      
