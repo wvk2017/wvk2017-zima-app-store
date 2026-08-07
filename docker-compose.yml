@@ -10,8 +10,8 @@ services:
       - /DATA/AppData/fracattack/data:/data
       - /DATA/AppData/fracattack:/appdata
     environment:
-      NETWORK_IP: "192.168.1.0" # Set to your local network subnet prefix
-      APPS_SUBNET: "192.168.1.0/16" 
+      NETWORK_IP: "192.168.2.15" # Set to your local network subnet prefix
+      APPS_SUBNET: "192.168.2.15/16" 
       RPC_USER: "fractal"
       RPC_PASSWORD: "Choose_A_Secure_RPC_Password_Here"
       BTC_P2P_PORT: "28343"
@@ -158,8 +158,9 @@ services:
       APP_HOST: fractald
       APP_PORT: 3000
       JWT_SECRET: "ChangeThisToARandomStringForProxySecurity"
-    ports:
-      - "3000:3000"
+        ports:
+      - "8384:3000" # Web UI Dashboard mapping (Access via http://192.168.2.15:8384)
     depends_on:
       - fractald
+      - ckpool
         
