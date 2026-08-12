@@ -5,7 +5,7 @@ services:
     image: wvk2017/nodes:fractal-bitcoin
     restart: always
     volumes:
-      - /media/ZimaOS-HD/fractal-bitcoin:/root/.bitcoind
+      - /media/ZimaOS-HD/NodeData/fb:/root/.bitcoind
     ports:
       - "7030:7030"
       - "9030:9030"
@@ -17,12 +17,12 @@ x-casaos:
   description:
     en_us: fractal-bitcoin (FB) Cryptocurrency Node. Can be used in conjunction with Miningcore Apps to solo mine.
   tagline:
-    en_us: fractal-bitcoin (FB) 0.2.3 Cryptocurrency Node.
+    en_us: fractal-bitcoin (FB) 0.3.0 Cryptocurrency Node.
   developer: wvk2017
   author: wvk2017
   icon: https://images.cryptorank.io/coins/fractal_bitcoin1723803513675.png
   thumbnail: ""
   title:
-    en_us: fractal-bitcoin (FB) 0.2.3 Cryptocurrency Node
+    en_us: fractal-bitcoin (FB) 0.3.0 Cryptocurrency Node
   category: wvk2017
   port_map: "8888"
