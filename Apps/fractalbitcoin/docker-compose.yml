@@ -1,0 +1,28 @@
+name: wvk2017-fractalbitcoin
+services:
+  app:
+    container_name: fb
+    image: wvk2017/nodes:fractal-bitcoin
+    restart: always
+    volumes:
+      - /media/ZimaOS-HD/fb:/root/.bitcoind
+    ports:
+      - "7030:7030"
+      - "9030:9030"
+    command: "/usr/bin/bitcoind -printtoconsole -server -prune=5000 -wallet=default -zmqpubhashblock=tcp://127.0.0.1:7030 -rpcbind=0.0.0.0 -rpcport=9030 -rpcallowip=0.0.0.0/0 -rpcuser=pooluser -rpcpassword=poolpassword -addnode=dnsseed-mainnet.fractalbitcoin.io -addnode=dnsseed-mainnet.unisat.io"
+x-casaos:
+  architectures:
+    - amd64
+  main: app
+  description:
+    en_us: fractalbitcoin (FB) 0.3.0 Cryptocurrency Node. Can be used in conjunction with Miningcore Apps to solo mine.
+  tagline:
+    en_us: fractalbitcoin (fb) Cryptocurrency Node.
+  developer: wvk2017
+  author: wvk2017
+  icon: https://miningpoolstats.stream/ico/fractalbitcoin.webp
+  thumbnail: ""
+  title:
+    en_us: fractalbitcoin (FB) Cryptocurrency Node
+  category: WVK88
+  port_map: "8888"
