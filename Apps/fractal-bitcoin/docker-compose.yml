@@ -9,7 +9,7 @@ services:
     ports:
       - "7030:7030"
       - "9030:9030"
-    command: "/usr/bin/bitcoind -printtoconsole -server -maxconnections=256 -prune=10000 -wallet=default -zmqpubhashblock=tcp://127.0.0.1:7030 -rpcbind=0.0.0.0 -rpcport=9030 -rpcallowip=0.0.0.0/0 -rpcuser=pooluser -rpcpassword=poolpassword -addnode=dnsseed-mainnet.unisat.io -addnode=dnsseed-mainnet.fractalbitcoin.io"
+    command: "/usr/bin/bitcoind -printtoconsole -conf=/data/bitcoin.conf -datadir=/data -server=1 -txindex=1 -maxconnections=256 -prune=10000 -wallet=default -zmqpubhashblock=tcp://127.0.0.1:7030 -rpcbind=0.0.0.0 -rpcport=9030 -rpcallowip=0.0.0.0/0 -rpcuser=pooluser -rpcpassword=poolpassword -addnode=dnsseed-mainnet.unisat.io -addnode=dnsseed-mainnet.fractalbitcoin.io"
 x-casaos:
   architectures:
     - amd64
@@ -17,12 +17,12 @@ x-casaos:
   description:
     en_us: fractal-bitcoin (FB) Cryptocurrency Node. Can be used in conjunction with Miningcore Apps to solo mine.
   tagline:
-    en_us: fractal-bitcoin (FB) 0.3.0 Cryptocurrency Node.
+    en_us: fractal-bitcoin (FB) 0.3.01 Cryptocurrency Node.
   developer: wvk2017
   author: wvk2017
   icon: https://images.cryptorank.io/coins/fractal_bitcoin1723803513675.png
   thumbnail: ""
   title:
-    en_us: fractal-bitcoin (FB) 0.3.0 Cryptocurrency Node
+    en_us: fractal-bitcoin (FB) 0.3.01 Cryptocurrency Node
   category: wvk2017
   port_map: "8888"
