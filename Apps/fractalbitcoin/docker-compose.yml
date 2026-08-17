@@ -9,7 +9,7 @@ services:
     ports:
       - "7030:7030"
       - "9030:9030"
-    command: "/usr/bin/bitcoind -printtoconsole -server -txindex=0 -prune=1000 -dbcache=8000 -disablewallet=1 -zmqpubhashblock=tcp://127.0.0.1:7030 -rpcbind=0.0.0.0 -rpcport=9030 -rpcallowip=0.0.0.0/0 -rpcuser=pooluser -rpcpassword=poolpassword -addnode=dnsseed-mainnet.fractalbitcoin.io -addnode=dnsseed-mainnet.unisat.io"
+    command: "/usr/bin/bitcoind -printtoconsole -server -txindex=0 -prune=10000 -disablewallet=1 -zmqpubhashblock=tcp://127.0.0.1:7030 -rpcbind=0.0.0.0 -rpcport=9030 -rpcallowip=0.0.0.0/0 -rpcuser=pooluser -rpcpassword=poolpassword -addnode=dnsseed-mainnet.fractalbitcoin.io -addnode=dnsseed-mainnet.unisat.io"
 x-casaos:
   architectures:
     - amd64
@@ -24,5 +24,5 @@ x-casaos:
   thumbnail: ""
   title:
     en_us: fractalbitcoin (FB) Cryptocurrency Node
-  category: WVK88
+  category: WVK2017
   port_map: "8888"
