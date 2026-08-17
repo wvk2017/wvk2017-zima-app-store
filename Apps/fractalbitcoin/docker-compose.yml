@@ -23,6 +23,6 @@ x-casaos:
   icon: https://miningpoolstats.stream/ico/fractalbitcoin.webp
   thumbnail: ""
   title:
-    en_us: fractalbitcoin (FB) Cryptocurrency Node
+    en_us: fractalbitcoin (FB) 0.3.0 Cryptocurrency Node
   category: WVK2017
   port_map: "8888"
