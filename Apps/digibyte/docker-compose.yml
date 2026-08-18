@@ -1,4 +1,4 @@
-name: retro-mike-digibyte
+name: wvk2017-digibyte
 services:
   app:
     container_name: dgb
@@ -36,13 +36,13 @@ x-casaos:
     en_us: wvk2017 Digibyte Cryptocurrency Node. Can be used in conjunction with Miningcore Apps to solo mine.
   tagline:
     en_us: Digibyte Cryptocurrency Node.
-  developer: Retro Mike
-  author: Retro Mike
+  developer: wvk2017
+  author: wvk2017
   icon: https://github.com/DigiByte-Core/digibyte-logos/blob/master/Logos%20Bitmap/transparent%20bg/ClearBg%20DigiByte.png?raw=true
   # Thumbnail image for the application (if any)
   thumbnail: ""
   # Title for the application
   title:
     en_us: Digibyte (DGB) Node
-  category: RetroMike
+  category: wvk2017
   port_map: "8888"
