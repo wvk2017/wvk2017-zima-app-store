@@ -1,4 +1,4 @@
-name: retro-mike-wojakcoin
+name: wvk2017-wojakcoin
 services:
   app:
     container_name: wjk
@@ -18,11 +18,11 @@ x-casaos:
     en_us: Wojakcoin Cryptocurrency Node. Can be used in conjunction with Miningcore Apps to solo mine.
   tagline:
     en_us: Wojakcoin Cryptocurrency Node.
-  developer: Retro Mike
-  author: Retro Mike
+  developer: wvk2017
+  author: wvk2017
   icon: https://wojakcoin.cash/wojak-logo.png
   thumbnail: ""
   title:
     en_us: Wojakcoin (WJK) Node
-  category: RetroMike
+  category: wvk2017
   port_map: "8888"
