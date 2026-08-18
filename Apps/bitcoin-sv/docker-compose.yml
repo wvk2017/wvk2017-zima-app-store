@@ -1,4 +1,4 @@
-name: retro-mike-bitcoin-sv
+name: wvk2017-bitcoin-sv
 services:
   app:
     container_name: btcsv
@@ -35,12 +35,12 @@ x-casaos:
     en_us: Bitcoin Sv Cryptocurrency Node. Can be used in conjunction with Miningcore Apps to solo mine.
   tagline:
     en_us: Bitcoin Cash Cryptocurrency Node.
-  developer: Retro Mike
-  author: Retro Mike
+  developer: wvk2017
+  author: wvk2017
   icon: https://cryptologos.cc/logos/bitcoin-sv-bsv-logo.png
   thumbnail: ""
   # Title for the application
   title:
     en_us: Bitcoin Sv (BTC SV) Node
-  category: RetroMike
+  category: wvk2017
   port_map: "8888"
