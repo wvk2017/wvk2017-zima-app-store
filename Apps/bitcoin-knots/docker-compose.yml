@@ -1,4 +1,4 @@
-name: retro-mike-bitcoin-knots
+name: wvk2017-bitcoin-knots
 services:
   app:
     container_name: btc
@@ -34,11 +34,11 @@ x-casaos:
     en_us: Bitcoin Knots Cryptocurrency Node. Can be used in conjunction with Miningcore Apps to solo mine.
   tagline:
     en_us: Bitcoin Knots Cryptocurrency Node.
-  developer: Retro Mike
-  author: Retro Mike
+  developer: wvk2017
+  author: wvk2017
   icon: https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Bitcoin.svg/1200px-Bitcoin.svg.png
   thumbnail: ""
   title:
     en_us: Bitcoin Knots (BTC) Node
-  category: RetroMike
+  category: wvk2017
   port_map: "8888"
