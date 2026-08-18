@@ -42,5 +42,5 @@ x-casaos:
   # Title for the application
   title:
     en_us: Bitcoin Sv (BTC SV) Node
-  category: wvk2017
+  category: WVK2017
   port_map: "8888"
