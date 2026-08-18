@@ -1,4 +1,4 @@
-name: retro-mike-nitocoin
+name: wvk2017-nitocoin
 services:
   app:
     container_name: nito
@@ -18,11 +18,11 @@ x-casaos:
     en_us: Nitcoin (NITO) Cryptocurrency Node. Can be used in conjunction with Miningcore Apps to solo mine.
   tagline:
     en_us: Nitcoin (NITO) Cryptocurrency Node.
-  developer: Retro Mike
-  author: Retro Mike
+  developer: wvk2017
+  author: wvk2017
   icon: https://miningpoolstats.stream/ico/nitocoin.webp
   thumbnail: ""
   title:
     en_us: Nitcoin (NITO) Cryptocurrency Node
-  category: RetroMike
+  category: wvk2017
   port_map: "8888"
