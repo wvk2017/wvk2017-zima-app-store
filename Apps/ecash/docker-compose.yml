@@ -1,4 +1,4 @@
-name: retro-mike-ecash
+name: wvk2017-ecash
 services:
   app:
     container_name: ecash
@@ -34,11 +34,11 @@ x-casaos:
     en_us: Ecash XEC Cryptocurrency Node. Can be used in conjunction with Miningcore Apps to solo mine.
   tagline:
     en_us: Ecash XEC Cryptocurrency Node.
-  developer: WVK88
-  author: WVK88
+  developer: wvk2017
+  author: wvk2017
   icon: https://miningpoolstats.stream/ico/ecash.webp
   thumbnail: ""
   title:
     en_us: Ecash (XEC) Node
-  category: WVK88
+  category: WVK2017
   port_map: "8888"
