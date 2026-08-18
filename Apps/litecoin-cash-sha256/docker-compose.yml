@@ -1,4 +1,4 @@
-name: retro-mike-litecoincash-sha256
+name: wvk2017-litecoincash-sha256
 services:
   app:
     container_name: lcc_sha256
@@ -18,11 +18,11 @@ x-casaos:
     en_us: Litecoin Cash (SHA256) Cryptocurrency Node. Can be used in conjunction with Miningcore Apps to solo mine.
   tagline:
     en_us: Litecoin Cash (SHA256) Cryptocurrency Node.
-  developer: Retro Mike
-  author: Retro Mike
+  developer: wvk2017
+  author: wvk2017
   icon: https://miningpoolstats.stream/ico/litecoincash.webp
   thumbnail: ""
   title:
     en_us: Litecoin Cash (SHA256) Cryptocurrency Node
-  category: RetroMike
+  category: wvk2017
   port_map: "8888"
