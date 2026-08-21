@@ -14,7 +14,7 @@ services:
       volumes:
         - container: /root/.bitcoincashIId
           description:
-            en_us: 'Container Path: /root/.bitcoin'
+            en_us: 'Container Path: /root/.bitcoincashII'
       ports:
         - container: "7031"
           description:
