@@ -1,1 +1,44 @@
-
+name: wvk2017-peercoin
+services:
+  app:
+    container_name: ppc
+    image: theretromike/nodes:peercoin
+    restart: always
+    volumes:
+      - /media/ZimaOS-HD/NodeData/ppc:/root/.peercoin
+    ports:
+      - "7012:7012"
+      - "9012:9012"
+      - "9901:9901"
+    command: "/usr/bin/peercoind -printtoconsole -server -prune=550 -wallet=default -zmqpubhashblock=tcp://127.0.0.1:7012 -rpcbind=0.0.0.0 -rpcport=9012 -rpcallowip=0.0.0.0/0 -port=9901 -rpcuser=pooluser -rpcpassword=poolpassword"
+    x-casaos:
+      volumes:
+        - container: /root/.peercoin
+          description:
+            en_us: 'Container Path: /root/.peercoin'
+      ports:
+        - container: "7012"
+          description:
+            en_us: 'Container Port: 7012'
+        - container: "9012"
+          description:
+            en_us: 'Container Port: 9012'
+        - container: "9901"
+          description:
+            en_us: 'Container Port: 9901'
+x-casaos:
+  architectures:
+    - amd64
+  main: app
+  description:
+    en_us: peercoin Cryptocurrency Node. Can be used in conjunction with Miningcore Apps to solo mine.
+  tagline:
+    en_us: peercoin Cryptocurrency Node.
+  developer: wvk2017
+  author: wvk2017
+  icon: https://cryptologos.cc/logos/peercoin-ppc-logo.png
+  thumbnail: ""
+  title:
+    en_us: peercoin (PPC) Node
+  category: WVK2017
+  port_map: "8888"
