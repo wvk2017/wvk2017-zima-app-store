@@ -13,7 +13,7 @@ services:
     command: "/usr/bin/peercoind -printtoconsole -server -prune=550 -wallet=default -zmqpubhashblock=tcp://127.0.0.1:7012 -rpcbind=0.0.0.0 -rpcport=9012 -rpcallowip=0.0.0.0/0 -port=9901 -rpcuser=pooluser -rpcpassword=poolpassword"
     x-casaos:
       volumes:
-        - container: /root/.peercoin
+        - container: /root/.bitcoin
           description:
             en_us: 'Container Path: /root/.peercoin'
       ports:
