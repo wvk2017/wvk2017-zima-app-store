@@ -5,27 +5,11 @@ services:
     image: theretromike/nodes:peercoin
     restart: always
     volumes:
-      - /media/ZimaOS-HD/NodeData/ppc:/root/.peercoin
+      - /media/ZimaOS-HD/ppc:/root/.peercoin
     ports:
       - "7012:7012"
       - "9012:9012"
-      - "9901:9901"
-    command: "/usr/bin/peercoind -printtoconsole -server -prune=550 -wallet=default -zmqpubhashblock=tcp://127.0.0.1:7012 -rpcbind=0.0.0.0 -rpcport=9012 -rpcallowip=0.0.0.0/0 -port=9901 -rpcuser=pooluser -rpcpassword=poolpassword"
-    x-casaos:
-      volumes:
-        - container: /root/.bitcoin
-          description:
-            en_us: 'Container Path: /root/.peercoin'
-      ports:
-        - container: "7012"
-          description:
-            en_us: 'Container Port: 7012'
-        - container: "9012"
-          description:
-            en_us: 'Container Port: 9012'
-        - container: "9901"
-          description:
-            en_us: 'Container Port: 9901'
+    command: "/usr/bin/peercoind -printtoconsole -server -prune=550 -wallet=default -zmqpubhashblock=tcp://127.0.0.1:7012 -rpcbind=0.0.0.0 -rpcport=9012 -rpcallowip=0.0.0.0/0 -rpcuser=pooluser -rpcpassword=poolpassword"
 x-casaos:
   architectures:
     - amd64
