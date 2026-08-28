@@ -1,0 +1,28 @@
+name: wvk2017-btgs
+services:
+  app:
+    container_name: btgs
+    image: wvk2017/nodes:bitcoingold
+    restart: always
+    volumes:
+      - /media/ZimaOS-HD/NodeData/btgs:/root/.bitcoin
+    ports:
+      - "7031:7031"
+      - "9031:9031"
+    command: "/usr/bin/bitcoind -printtoconsole -server -prune=550 -wallet=default -zmqpubhashblock=tcp://127.0.0.1:7031 -rpcbind=0.0.0.0 -rpcport=9031 -rpcallowip=0.0.0.0/0 -rpcuser=pooluser -rpcpassword=poolpassword"
+x-casaos:
+  architectures:
+    - amd64
+  main: app
+  description:
+    en_us: bitcoingold (BTGS) Cryptocurrency Node. Can be used in conjunction with Miningcore Apps to solo mine.
+  tagline:
+    en_us: bitcoingold (BTGS)  Cryptocurrency Node.
+  developer: wvk2017
+  author: wvk2017
+  icon: https://miningpoolstats.stream/ico/btgscoin.webp
+  thumbnail: ""
+  title:
+    en_us: bitcoingold (BTGS)  Cryptocurrency Node
+  category: WVK2017
+  port_map: "8888"
