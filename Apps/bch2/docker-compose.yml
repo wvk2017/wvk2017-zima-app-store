@@ -2,14 +2,14 @@ name: wvk2017-bch2
 services:
   app:
     container_name: bch2
-    image: wvk2017/nodes:bch2
+    image: bitcoincashii/bitcoincashii-core:v27.0.2
     restart: always
     volumes:
       - /media/ZimaOS-HD/NodeData/bitcoincashII:/root/.bitcoincashII
     ports:
       - "7031:7031"
       - "9031:9031"
-    command: "/usr/bin/bitcoincashIId -printtoconsole -server -prune=550 -disablewallet=1 -zmqpubhashblock=tcp://127.0.0.1:7031 -rpcbind=0.0.0.0 -rpcport=9031 -rpcallowip=0.0.0.0/0 -rpcuser=pooluser -rpcpassword=poolpassword"
+    command: "/usr/bin/bitcoincashIId -printtoconsole -server -prune=550  -reindex -wallet=default -zmqpubhashblock=tcp://127.0.0.1:7031 -rpcbind=0.0.0.0 -rpcport=9031 -rpcallowip=0.0.0.0/0 -rpcuser=pooluser -rpcpassword=poolpassword"
 x-casaos:
   architectures:
     - amd64
