@@ -2,7 +2,7 @@ name: wvk2017-bch2
 services:
   app:
     container_name: bch2
-    image: bitcoincashii/bitcoincashii-core:v27.0.2
+    image: wvk2017/nodes:bch2
     restart: always
     volumes:
       - /media/ZimaOS-HD/NodeData/bitcoincashII:/root/.bitcoincashII
