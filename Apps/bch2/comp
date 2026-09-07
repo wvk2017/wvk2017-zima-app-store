@@ -1,14 +1,6 @@
 version: "3.7"
 
 services:
-  app_proxy:
-    environment:
-      APP_HOST: axebch2-app
-      APP_PORT: 3000
-      JWT_SECRET: "${JWT_SECRET}"
-    networks:
-      - umbrel_main_network
-
   init_permissions:
     image: alpine:3.22.1
     restart: "no"
@@ -32,13 +24,8 @@ services:
         condition: service_completed_successfully
       bch2:
         condition: service_started
-    networks:
-      default:
-        aliases:
-          - axebch2-app
-      umbrel_main_network:
-        aliases:
-          - axebch2-app
+    ports:
+      - "8095:3000/tcp"  # Zorgt ervoor dat ZimaOS verbinding kan maken met de web UI
     volumes:
       - /DATA/AppData/axebch2/data:/data
       - /var/run/docker.sock:/var/run/docker.sock
@@ -48,14 +35,14 @@ services:
       APP_CHANNEL: "DEV"
       APP_RELEASE_PHASE: "ALPHA"
       APP_SELF_RESTART_ENABLED: "1"
-      APP_COMPOSE_PROJECT: "${COMPOSE_PROJECT_NAME}"
-      NETWORK_IP: "${NETWORK_IP}"
+      APP_COMPOSE_PROJECT: "axebch2"
+      NETWORK_IP: "127.0.0.1"
       BCH2_NODE_IMAGE: "ghcr.io/willitmod/axebch2-node:0.1.33-dev"
       CKPOOL_IMAGE: "ghcr.io/willitmod/axebch2-ckpool:0.1.33-dev"
       BCH2_RPC_HOST: "bch2"
       BCH2_RPC_PORT: "8342"
       BCH2_RPC_USER: "bch2"
-      BCH2_RPC_PASS: "${APP_PASSWORD}"
+      BCH2_RPC_PASS: "VERANDER_DIT_WACHTWOORD" # Vul hier een uniek wachtwoord in
       CKPOOL_STRATUM_HOST: "ckpool"
       CKPOOL_STRATUM_PORT: "3333"
     healthcheck:
@@ -77,10 +64,10 @@ services:
     environment:
       NETWORK: "mainnet"
       RPC_USER: "bch2"
-      RPC_PASSWORD: "${APP_PASSWORD}"
+      RPC_PASSWORD: "VERANDER_DIT_WACHTWOORD" # Moet exact hetzelfde zijn als hierboven
       RPC_PORT: "8342"
       P2P_PORT: "8339"
-      EXTERNAL_IP: "${NETWORK_IP}"
+      EXTERNAL_IP: "127.0.0.1"
       FORCE_IPV4_BIND: "1"
       PRUNE: "0"
       RPC_THREADS: "4"
@@ -107,7 +94,7 @@ services:
       retries: 20
       start_period: 2m
 
- ckpool:
+  ckpool:
     image: ghcr.io/willitmod/axebch2-ckpool:0.1.33-dev
     restart: unless-stopped
     stop_grace_period: 30s
@@ -120,9 +107,9 @@ services:
       BCH2_RPC_HOST: "bch2"
       BCH2_RPC_PORT: "8342"
       BCH2_RPC_USER: "bch2"
-      BCH2_RPC_PASSWORD: "${APP_PASSWORD}"
+      BCH2_RPC_PASSWORD: "VERANDER_DIT_WACHTWOORD" # Moet exact hetzelfde zijn als hierboven
       BCH2_ZMQ_HASHBLOCK_PORT: "28342"
-      PAYOUT_ADDRESS: "CHANGEME_BCH_PAYOUT_ADDRESS"
+      PAYOUT_ADDRESS: "CHANGEME_BCH_PAYOUT_ADDRESS" # Vergeet niet je payout adres in te vullen
       MINDIFF: "1"
       STARTDIFF: "16"
       MAXDIFF: "0"
@@ -151,4 +138,3 @@ x-casaos:
   scheme: http
   title:
     en_US: AxeBch2 Dev
-
