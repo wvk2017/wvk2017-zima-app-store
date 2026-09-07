@@ -1,11 +1,16 @@
 version: "3.7"
 
 services:
+  # De proxy die de app toegankelijk maakt. Poort 3000 wordt hier doorgestuurd naar poort 8095 op je ZimaOS.
+  app_proxy:
+    image: nginx:alpine # Umbrel gebruikt hier normaal een ingebouwde proxy voor; we mappen de app nu direct of via nginx indien de proxy-image ontbreekt.
+    # Omdat het origineel geen image specificeerde (Umbrel regelt dit intern), koppelen we de app-poort direct via de 'app' service hieronder.
+    
   init_permissions:
     image: alpine:3.22.1
     restart: "no"
     volumes:
-      - /DATA/AppData/willitmod-dev-axebch2/data:/data
+      - /DATA/AppData/axebch2/data:/data
     command:
       - /bin/sh
       - -ec
@@ -19,15 +24,15 @@ services:
     image: ghcr.io/willitmod/axebch2-app:0.2.0.3-dev
     user: "1000:1000"
     restart: unless-stopped
+    ports:
+      - "8095:3000" # VERANDERING: Dit maakt de WebUI bereikbaar op http://<ip-van-je-zimaos>:8095
     depends_on:
       init_permissions:
         condition: service_completed_successfully
       bch2:
         condition: service_started
-    ports:
-      - "3080:3000/tcp" # Maakt de WebUI direct bereikbaar op http://<je-zimaos-ip>:3080
     volumes:
-      - /DATA/AppData/willitmod-dev-axebch2/data:/data
+      - /DATA/AppData/axebch2/data:/data
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       APP_ID: "willitmod-dev-axebch2"
@@ -35,16 +40,17 @@ services:
       APP_CHANNEL: "DEV"
       APP_RELEASE_PHASE: "ALPHA"
       APP_SELF_RESTART_ENABLED: "1"
-      APP_COMPOSE_PROJECT: "willitmod-dev-axebch2"
-      NETWORK_IP: "127.0.0.1"
+      APP_COMPOSE_PROJECT: "axebch2"
+      NETWORK_IP: "127.0.0.1" # Vul hier eventueel het echte LAN-IP van je ZimaOS in
       BCH2_NODE_IMAGE: "ghcr.io/willitmod/axebch2-node:0.1.33-dev"
       CKPOOL_IMAGE: "ghcr.io/willitmod/axebch2-ckpool:0.1.33-dev"
       BCH2_RPC_HOST: "bch2"
       BCH2_RPC_PORT: "8342"
       BCH2_RPC_USER: "bch2"
-      BCH2_RPC_PASS: "VeiligZimaWachtwoord123" # Je kunt dit RPC-wachtwoord naar wens aanpassen
+      BCH2_RPC_PASS: "MijnVeiligWachtwoord123" # VERANDERING: Vervang door een eigen wachtwoord
       CKPOOL_STRATUM_HOST: "ckpool"
       CKPOOL_STRATUM_PORT: "3333"
+      JWT_SECRET: "MijnSuperGeheimeJWTToken"    # VERANDERING: Vervang door een willekeurige lange reeks letters/cijfers
     healthcheck:
       test:
         - CMD-SHELL
@@ -64,10 +70,10 @@ services:
     environment:
       NETWORK: "mainnet"
       RPC_USER: "bch2"
-      RPC_PASSWORD: "VeiligZimaWachtwoord123" # Moet gelijk zijn aan BCH2_RPC_PASS hierboven
+      RPC_PASSWORD: "MijnVeiligWachtwoord123" # VERANDERING: Moet gelijk zijn aan BCH2_RPC_PASS hierboven
       RPC_PORT: "8342"
       P2P_PORT: "8339"
-      EXTERNAL_IP: "127.0.0.1"
+      EXTERNAL_IP: "127.0.0.1"               # Vul hier eventueel het echte LAN-IP van je ZimaOS in
       FORCE_IPV4_BIND: "1"
       PRUNE: "0"
       RPC_THREADS: "4"
@@ -82,7 +88,7 @@ services:
       ONE_TIME_REINDEX_KEY: "bitcoincashii-v27.0.2"
       ONE_TIME_REINDEX_REQUIRE_EXISTING_DATA: "1"
     volumes:
-      - /DATA/AppData/willitmod-dev-axebch2/data/node:/data/node
+      - /DATA/AppData/axebch2/data/node:/data/node
     ports:
       - "8339:8339/tcp"
     healthcheck:
@@ -107,9 +113,9 @@ services:
       BCH2_RPC_HOST: "bch2"
       BCH2_RPC_PORT: "8342"
       BCH2_RPC_USER: "bch2"
-      BCH2_RPC_PASSWORD: "VeiligZimaWachtwoord123" # Moet gelijk zijn aan BCH2_RPC_PASS hierboven
+      BCH2_RPC_PASSWORD: "MijnVeiligWachtwoord123" # VERANDERING: Moet gelijk zijn aan de rest
       BCH2_ZMQ_HASHBLOCK_PORT: "28342"
-      PAYOUT_ADDRESS: "CHANGEME_BCH_PAYOUT_ADDRESS" # Pas dit aan naar je eigen BCH-adres!
+      PAYOUT_ADDRESS: "CHANGEME_BCH_PAYOUT_ADDRESS" # Belangrijk: Pas dit aan naar je eigen BCH adres!
       MINDIFF: "1"
       STARTDIFF: "16"
       MAXDIFF: "0"
@@ -118,7 +124,7 @@ services:
     ports:
       - "9265:3333/tcp"
     volumes:
-      - /DATA/AppData/willitmod-dev-axebch2/data/pool:/data/pool
+      - /DATA/AppData/axebch2/data/pool:/data/pool
     healthcheck:
       test:
         - CMD-SHELL
@@ -128,16 +134,14 @@ services:
       retries: 20
       start_period: 45s
 
-# ZimaOS WebUI integratie instellingen
+# Integratie met het ZimaOS Dashboard
 x-casaos:
-  architectures:
-    - amd64
-    - arm64
-  main: app
+  author: WillItMod
+  category: Crypto
   icon: https://githubusercontent.com
+  index: /
+  port_map: "8095"
+  scheme: http
   title:
-    en_US: WillItMod Dev
-  description:
-    en_US: Bitcoin Cash II app-stack geconverteerd voor ZimaOS.
-  port_map: "3080"
-  developer: WillItMod
+    en_US: AxeBch2 Dev
+
