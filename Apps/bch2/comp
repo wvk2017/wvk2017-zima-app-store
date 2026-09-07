@@ -50,7 +50,6 @@ services:
       BCH2_RPC_PASS: "${APP_PASSWORD}" # VERANDERING: Vervang door een eigen wachtwoord
       CKPOOL_STRATUM_HOST: "ckpool"
       CKPOOL_STRATUM_PORT: "3333"
-      JWT_SECRET: "MijnSuperGeheimeJWTToken"    # VERANDERING: Vervang door een willekeurige lange reeks letters/cijfers
     healthcheck:
       test:
         - CMD-SHELL
