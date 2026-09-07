@@ -10,7 +10,7 @@ services:
     image: alpine:3.22.1
     restart: "no"
     volumes:
-      - /ZimaOS-HD/NodeData/axebch2/data:/data
+      - /DATA/AppData/axebch2/data:/data
     command:
       - /bin/sh
       - -ec
@@ -32,7 +32,7 @@ services:
       bch2:
         condition: service_started
     volumes:
-      - /ZimaOS-HD/NodeData/axebch2/data:/data
+      - /DATA/AppData/axebch2/data:/data
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       APP_ID: "willitmod-dev-axebch2"
@@ -73,7 +73,7 @@ services:
       RPC_PASSWORD: "MijnVeiligWachtwoord123" # VERANDERING: Moet gelijk zijn aan BCH2_RPC_PASS hierboven
       RPC_PORT: "8342"
       P2P_PORT: "8339"
-      EXTERNAL_IP: "192.168.2.2"               # Vul hier eventueel het echte LAN-IP van je ZimaOS in
+      EXTERNAL_IP: "127.0.0.1"               # Vul hier eventueel het echte LAN-IP van je ZimaOS in
       FORCE_IPV4_BIND: "1"
       PRUNE: "0"
       RPC_THREADS: "4"
@@ -88,13 +88,13 @@ services:
       ONE_TIME_REINDEX_KEY: "bitcoincashii-v27.0.2"
       ONE_TIME_REINDEX_REQUIRE_EXISTING_DATA: "1"
     volumes:
-      - /ZimaOS-HD/NodeData/axebch2/data/node:/data/node
+      - /DATA/AppData/axebch2/data/node:/data/node
     ports:
       - "8339:8339/tcp"
     healthcheck:
       test:
         - CMD-SHELL
-        - bitcoincashII-cli -datadir=/data/node -rpcuser="bch2" -rpcpassword="MijnVeiligWachtwoord123" getblockchaininfo >/dev/null 2>&1
+        - bitcoincashII-cli -datadir=/data/node -rpcuser="$$RPC_USER" -rpcpassword="$$RPC_PASSWORD" getblockchaininfo >/dev/null 2>&1
       interval: 30s
       timeout: 10s
       retries: 20
@@ -124,7 +124,7 @@ services:
     ports:
       - "9265:3333/tcp"
     volumes:
-      - /ZimaOS-HD/NodeData/axebch2/data/pool:/data/pool
+      - /DATA/AppData/axebch2/data/pool:/data/pool
     healthcheck:
       test:
         - CMD-SHELL
@@ -136,7 +136,7 @@ services:
 
 # Integratie met het ZimaOS Dashboard
 x-casaos:
-  author: wvk88
+  author: WillItMod
   category: Crypto
   icon: https://githubusercontent.com
   index: /
@@ -144,3 +144,4 @@ x-casaos:
   scheme: http
   title:
     en_US: AxeBch2 Dev
+
