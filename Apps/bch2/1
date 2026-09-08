@@ -9,7 +9,7 @@ services:
     ports:
       - "7031:7031"
       - "9031:9031"
-    command: "/usr/bin/bitcoincashIId -datadir=/data/node -printtoconsole -server -reindex -zmqpubhashblock=tcp://127.0.0.1:7031 -rpcbind=0.0.0.0 -rpcport=9031 -rpcallowip=0.0.0.0/0 -rpcuser=pooluser -rpcpassword=poolpassword -getblockchaininfo >/dev/null 2>&1"
+    command: "/usr/bin/bitcoincashIId -printtoconsole -server -reindex -zmqpubhashblock=tcp://127.0.0.1:7031 -rpcbind=0.0.0.0 -rpcport=9031 -rpcallowip=0.0.0.0/0 -rpcuser=pooluser -rpcpassword=poolpassword"
 x-casaos:
   architectures:
     - amd64
