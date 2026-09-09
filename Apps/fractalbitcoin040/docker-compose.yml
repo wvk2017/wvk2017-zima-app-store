@@ -1,4 +1,4 @@
-name: wvk2017-fractalbitcoin
+name: wvk2017-fractalbitcoin-v0.4.0
 services:
   app:
     container_name: fb
