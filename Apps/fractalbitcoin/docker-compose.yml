@@ -2,7 +2,7 @@ name: wvk2017-fractalbitcoin
 services:
   app:
     container_name: fb
-    image: wvk2017/nodes:fractal-bitcoin
+    image: wvk2017/nodes:fractal-bitcoin-v0.3.0
     restart: always
     volumes:
       - /media/ZimaOS-HD/NodeData/fb:/root/.bitcoin
