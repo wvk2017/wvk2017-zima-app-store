@@ -5,7 +5,7 @@ services:
     image: alpine:3.22.1
     restart: "no"
     networks:
-      - axefb_net
+      - fracattack-app
     volumes:
       - /DATA/AppData/fracattack/data:/data
       - /DATA/AppData/fracattack:/appdata
@@ -158,7 +158,7 @@ services:
     user: "1000:1000"
     restart: on-failure
     networks:
-      - axefb_net
+      - fracattack-app
     ports:
       - "8096:3000/tcp"
     depends_on:
@@ -194,7 +194,7 @@ services:
     restart: unless-stopped
     stop_grace_period: 15m30s
     networks:
-      - axefb_net
+      - fracattack-app
     depends_on:
       init_permissions:
         condition: service_completed_successfully
@@ -216,7 +216,7 @@ services:
     restart: unless-stopped
     stop_grace_period: 30s
     networks:
-      - axefb_net
+      - fracattack-app
     depends_on:
       init_permissions:
         condition: service_completed_successfully
