@@ -143,7 +143,7 @@ networks:
     driver: bridge
 
 x-casaos:
-  author: WillItMod
+  author: WVK2017
   category: Crypto
   icon: https://githubusercontent.com
   index: /
