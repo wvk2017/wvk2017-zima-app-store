@@ -1,0 +1,144 @@
+version: "3.7"
+
+services:
+  app_proxy:
+    image: alpine:3.22.1
+    command: sh -c "apk add --no-cache socat && socat TCP-LISTEN:3000,fork TCP:fracattack-app:3000"
+    environment:
+      APP_HOST: fracattack-app
+      APP_PORT: 3000
+      JWT_SECRET: "verander_dit_in_een_veilig_wachtwoord"
+    ports:
+      - "3000:3000"  # Dit opent de Web UI op poort 3000 van je server
+    networks:
+      - fracattack_network
+    depends_on:
+      - fracattack-app
+
+  fracattack-app:
+    image: ghcr.io/willitmod/fracattack-app:latest  # De ontbrekende web-app service
+    restart: unless-stopped
+    environment:
+      JWT_SECRET: "verander_dit_in_een_veilig_wachtwoord"
+    networks:
+      - fracattack_network
+    depends_on:
+      fractald:
+        condition: service_started
+
+  init:
+    image: alpine:3.22.1
+    volumes:
+      - ./fracattack/data:/data
+      - ./fracattack:/appdata
+      - ./fracattack/data/templates:/data/templates:rw
+    environment:
+      APPS_SUBNET: "10.21.0.0/16"
+      RPC_USER: "fractal"
+      RPC_PASSWORD: "veilig_rpc_wachtwoord_hier"
+      BTC_P2P_PORT: "28343"
+      BTC_RPC_PORT: "28342"
+      BTC_ZMQ_HASHBLOCK_PORT: "28345"
+      PAYOUT_ADDRESS: "bc1qg09gugv3kk2sv8svq7zewmtey00gppkctgtzk"
+    networks:
+      - fracattack_network
+    command:
+      - /bin/sh
+      - -ec
+      - |-
+        set -eu
+        apk add --no-cache bind-tools envsubst jq >/dev/null
+
+        if [ -n "$${JWT_SECRET:-}" ]; then
+          envfile="/appdata/.env"
+          tmp="/appdata/.env.tmp"
+          if [ -f "$$envfile" ]; then
+            grep -v '^JWT_SECRET=' "$$envfile" > "$$tmp" || true
+          else
+            : > "$$tmp"
+          fi
+          printf "JWT_SECRET=%s\n" "$$JWT_SECRET" >> "$$tmp"
+          chmod 600 "$$tmp" || true
+          chown 1000:1000 "$$tmp" || true
+          mv "$$tmp" "$$envfile"
+        fi
+
+        mkdir -p /data/node /data/pool/config /data/pool/www/pool /data/pool/www/users
+        chmod +x /data/templates/fractald-entrypoint.sh /data/templates/ckpool-entrypoint.sh 2>/dev/null || true
+        chown 1000:1000 /data/templates/fractald-entrypoint.sh /data/templates/ckpool-entrypoint.sh 2>/dev/null || true
+
+        if [ -f /data/templates/ckpool.conf.template ]; then
+          sed -i '/"auxd"[[:space:]]*:/,/^  ],/d' /data/templates/ckpool.conf.template || true
+          sed -i '/"auxaddress"[[:space:]]*:/d' /data/templates/ckpool.conf.template || true
+        fi
+
+        touch /appdata/settings.yml
+        chown 1000:1000 /appdata/settings.yml || true
+
+        ensure_bitcoin_conf_line() {
+          line="$$1"
+          grep -qxF "$$line" /data/node/bitcoin.conf || echo "$$line" >> /data/node/bitcoin.conf
+        }
+
+        set_bitcoin_conf_key() {
+          key="$$1"
+          value="$$2"
+          if grep -Eq "^[#[:space:]]*$$key=" /data/node/bitcoin.conf; then
+            sed -i "s|^[#[:space:]]*$$key=.*|$$key=$$value|" /data/node/bitcoin.conf
+          else
+            echo "$$key=$$value" >> /data/node/bitcoin.conf
+          fi
+        }
+
+        refresh_fractal_seed_addnodes() {
+          for seed in x9.dnsseed-mainnet.fractalbitcoin.io x9.dnsseed-mainnet.unisat.io; do
+            dig +short A "$$seed" 2>/dev/null \
+              | awk '/^[0-9.]+$$/ { print }' \
+              | sort -u \
+              | while read -r ip; do
+                  [ -n "$$ip" ] || continue
+                  ensure_bitcoin_conf_line "addnode=$$ip:8333"
+                done
+          done
+        }
+
+        if [ ! -f /data/node/bitcoin.conf ]; then
+          if [ -f /data/templates/bitcoin.conf.template ]; then
+            envsubst < /data/templates/bitcoin.conf.template > /data/node/bitcoin.conf
+          else
+            echo "rpcuser=fractal" > /data/node/bitcoin.conf
+            echo "rpcpassword=veilig_rpc_wachtwoord_hier" >> /data/node/bitcoin.conf
+          fi
+          chown -R 1000:1000 /data/node
+        else
+          tmp_conf="/data/node/bitcoin.conf.tmp"
+          awk '/^[[:space:]]*password123[[:space:]]*$/ { next } { if (!seen[$0]++) print }' /data/node/bitcoin.conf > "$$tmp_conf" && mv "$$tmp_conf" /data/node/bitcoin.conf
+          set_bitcoin_conf_key 'listen' '1'
+          set_bitcoin_conf_key 'discover' '1'
+          set_bitcoin_conf_key 'maxconnections' '256'
+          set_bitcoin_conf_key 'port' "$${BTC_P2P_PORT}"
+          ensure_bitcoin_conf_line 'dnsseed=1'
+          ensure_bitcoin_conf_line 'fixedseeds=1'
+          ensure_bitcoin_conf_line 'forcednsseed=1'
+        fi
+        refresh_fractal_seed_addnodes
+        chown 1000:1000 /data/node/bitcoin.conf || true
+
+  fractald:
+    image: ghcr.io/willitmod/fracattack-fractald:0.3.1-dev
+    user: "1000:1000"
+    restart: unless-stopped
+    stop_grace_period: 15m30s
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    volumes:
+      - ./fracattack/data/node:/data
+    ports:
+      - "28343:28343/tcp"
+    networks:
+      - fracattack_network
+
+networks:
+  fracattack_network:
+    driver: bridge
