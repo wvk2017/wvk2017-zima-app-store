@@ -1,0 +1,152 @@
+version: "3.7"
+
+services:
+  init_permissions:
+    image: alpine:3.22.1
+    restart: "no"
+    networks:
+      - axebch_net
+    volumes:
+      - /DATA/AppData/axebch2/data:/data
+    command:
+      - /bin/sh
+      - -ec
+      - |-
+        set -eu
+        mkdir -p /data/ui/state /data/node /data/pool/config /data/pool/www/pool /data/pool/www/users
+        chown -R 1000:1000 /data/ui /data/node /data/pool || true
+        chmod -R ug+rwX /data/ui /data/node /data/pool || true
+
+  app:
+    image: ghcr.io/willitmod/axebch2-app:0.2.0.3-dev
+    user: "1000:1000"
+    restart: unless-stopped
+    networks:
+      - axebch_net
+    ports:
+      - "8095:3000"
+    depends_on:
+      init_permissions:
+        condition: service_completed_successfully
+      bch2:
+        condition: service_started
+    volumes:
+      - /DATA/AppData/axebch2/data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      APP_ID: "willitmod-dev-axebch2"
+      APP_VERSION: "0.2.0.3-dev"
+      APP_CHANNEL: "DEV"
+      APP_RELEASE_PHASE: "ALPHA"
+      APP_SELF_RESTART_ENABLED: "1"
+      APP_COMPOSE_PROJECT: "axebch2"
+      NETWORK_IP: "127.0.0.1" 
+      BCH2_NODE_IMAGE: "ghcr.io/willitmod/axebch2-node:0.1.33-dev"
+      CKPOOL_IMAGE: "ghcr.io/willitmod/axebch2-ckpool:0.1.33-dev"
+      BCH2_RPC_HOST: "bch2"
+      BCH2_RPC_PORT: "8342"
+      BCH2_RPC_USER: "bch2"
+      BCH2_RPC_PASS: AxeBchNodePass2026 # <--- VERANDER DIT IN JOUW EIGEN WACHTWOORD
+      CKPOOL_STRATUM_HOST: "ckpool"
+      CKPOOL_STRATUM_PORT: "3333"
+      JWT_SECRET: d8f29as7d923hfshf29 # <--- VERANDER DIT IN EEN WILLEKEURIGE REEKS
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - python -c "import sys, urllib.request; r=urllib.request.urlopen('http://127.0.0.1:3000/api/about', timeout=3); sys.exit(0 if r.status == 200 else 1)"
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 90s
+
+  bch2:
+    image: ghcr.io/willitmod/axebch2-node:0.1.33-dev
+    restart: unless-stopped
+    stop_grace_period: 15m30s
+    networks:
+      - axebch_net
+    depends_on:
+      init_permissions:
+        condition: service_completed_successfully
+    environment:
+      NETWORK: "mainnet"
+      RPC_USER: "bch2"
+      RPC_PASSWORD: AxeBchNodePass2026 # <--- MOET EXACT GELIJK ZIJN AAN BCH2_RPC_PASS
+      RPC_PORT: "8342"
+      P2P_PORT: "8339"
+      EXTERNAL_IP: "127.0.0.1"
+      FORCE_IPV4_BIND: "1"
+      PRUNE: "0"
+      RPC_THREADS: "4"
+      MAX_MEMPOOL: "64"
+      DB_CACHE: "256"
+      TX_INDEX: "0"
+      BOOTSTRAP_CONNECTNODES: ""
+      PEER_WATCHDOG_INTERVAL: "30"
+      PEER_WATCHDOG_MIN_CONNECTIONS: "1"
+      ONE_TIME_FULL_RESYNC_KEY: "bitcoincashii-shadow-chain-20260413"
+      ONE_TIME_FULL_RESYNC_REQUIRE_EXISTING_DATA: "1"
+      ONE_TIME_REINDEX_KEY: "bitcoincashii-v27.0.2"
+      ONE_TIME_REINDEX_REQUIRE_EXISTING_DATA: "1"
+    volumes:
+      - /DATA/AppData/axebch2/data/node:/data/node
+    ports:
+      - "8339:8339/tcp"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - bitcoincashII-cli -datadir=/data/node -rpcuser="$$RPC_USER" -rpcpassword="$$RPC_PASSWORD" getblockchaininfo >/dev/null 2>&1
+      interval: 30s
+      timeout: 10s
+      retries: 20
+      start_period: 2m
+
+  ckpool:
+    image: ghcr.io/willitmod/axebch2-ckpool:0.1.33-dev
+    restart: unless-stopped
+    stop_grace_period: 30s
+    networks:
+      - axebch_net
+    depends_on:
+      init_permissions:
+        condition: service_completed_successfully
+      bch2:
+        condition: service_started
+    environment:
+      BCH2_RPC_HOST: "bch2"
+      BCH2_RPC_PORT: "8342"
+      BCH2_RPC_USER: "bch2"
+      BCH2_RPC_PASSWORD: AxeBchNodePass2026 # <--- MOET EXACT GELIJK ZIJN AAN DE REST
+      BCH2_ZMQ_HASHBLOCK_PORT: "28342"
+      PAYOUT_ADDRESS: "CHANGEME_BCH_PAYOUT_ADDRESS" 
+      MINDIFF: "1"
+      STARTDIFF: "16"
+      MAXDIFF: "0"
+    user: "1000:1000"
+    command: ["-k", "-L", "-c", "/data/pool/config/ckpool.conf"]
+    ports:
+      - "9265:3333/tcp"
+    volumes:
+      - /DATA/AppData/axebch2/data/pool:/data/pool
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - 'pid=$$(cat /tmp/ckpool/main.pid 2>/dev/null || true); [ -n "$$pid" ] && kill -0 "$$pid" 2>/dev/null'
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 45s
+
+networks:
+  axebch_net:
+    driver: bridge
+
+x-casaos:
+  author: WVK2017
+  category: Crypto
+  icon: https://githubusercontent.com
+  index: /
+  port_map: "8095"
+  scheme: http
+  title:
+    en_US: AxeBch2 Dev
