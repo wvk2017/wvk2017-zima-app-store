@@ -160,7 +160,7 @@ services:
     networks:
       - fractal
     ports:
-      - "8095:3000/tcp"
+      - "8096:3000/tcp"
     depends_on:
       init_permissions:
         condition: service_completed_successfully
