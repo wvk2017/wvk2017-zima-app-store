@@ -5,7 +5,7 @@ services:
     image: alpine:3.22.1
     restart: "no"
     networks:
-      - fractal
+      - axebch_net
     volumes:
       - /DATA/AppData/fracattack/data:/data
       - /DATA/AppData/fracattack:/appdata
@@ -14,10 +14,10 @@ services:
       APPS_SUBNET: "172.16.0.0/16"
       RPC_USER: "fractal"
       RPC_PASSWORD: "MijnVeiligWachtwoord123" # Pas dit aan naar een uniek wachtwoord
-      P2P_PORT: "28343"
-      RPC_PORT: "28342"
-      ZMQ_HASHBLOCK_PORT: "28345"
-      PAYOUT_ADDRESS: "bc1qp05vuzc5x4ym3cujh666xm6mzh0q6yqmkmtndl" # Vervang door jouw eigen Bitcoin-adres
+      BTC_P2P_PORT: "28343"
+      BTC_RPC_PORT: "28342"
+      BTC_ZMQ_HASHBLOCK_PORT: "28345"
+      PAYOUT_ADDRESS: "bc1qp05vuzc5x4ym3cujh666xm6mzh0q6yqmkmtndl"
     command:
       - /bin/sh
       - -ec
@@ -158,7 +158,7 @@ services:
     user: "1000:1000"
     restart: on-failure
     networks:
-      - fractal
+      - axebch_net
     ports:
       - "8096:3000/tcp"
     depends_on:
@@ -167,11 +167,11 @@ services:
     volumes:
       - /DATA/AppData/fracattack/data:/data
     environment:
-      RPC_HOST: "fractald"
-      RPC_PORT: "28342"
-      P2P_PORT: "28343"
-      RPC_USER: "fractal"
-      RPC_PASS: "MijnVeiligWachtwoord123" # Moet exact gelijk zijn aan RPC_PASSWORD hierboven
+      BTC_RPC_HOST: "fractald"
+      BTC_RPC_PORT: "28342"
+      BTC_P2P_PORT: "28343"
+      BTC_RPC_USER: "fractal"
+      BTC_RPC_PASS: "MijnVeiligWachtwoord123" 
       CKPOOL_STATUS_DIR: "/data/pool/www/pool"
       CKPOOL_STRATUM_HOST: "ckpool"
       CKPOOL_STRATUM_PORT: "3333"
@@ -194,7 +194,7 @@ services:
     restart: unless-stopped
     stop_grace_period: 15m30s
     networks:
-      - fractal
+      - axebch_net
     depends_on:
       init_permissions:
         condition: service_completed_successfully
@@ -238,7 +238,7 @@ services:
       start_period: 45s
 
 networks:
-  Fractal_net:
+  axebch_net:
     driver: bridge
 
 x-casaos:
@@ -246,7 +246,7 @@ x-casaos:
   category: Crypto
   icon: https://githubusercontent.com
   index: /
-  port_map: "8095"
+  port_map: "8096"
   scheme: http
   title:
     en_US: fractald Dev
