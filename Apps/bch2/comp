@@ -1,14 +1,11 @@
-version: "3.7"
+1version: "3.7"
 
 services:
-  # De proxy die de app toegankelijk maakt. Poort 3000 wordt hier doorgestuurd naar poort 8095 op je ZimaOS.
-  app_proxy:
-    image: nginx:alpine # Umbrel gebruikt hier normaal een ingebouwde proxy voor; we mappen de app nu direct of via nginx indien de proxy-image ontbreekt.
-    # Omdat het origineel geen image specificeerde (Umbrel regelt dit intern), koppelen we de app-poort direct via de 'app' service hieronder.
-    
   init_permissions:
     image: alpine:3.22.1
     restart: "no"
+    networks:
+      - axebch_net
     volumes:
       - /DATA/AppData/axebch2/data:/data
     command:
@@ -24,8 +21,10 @@ services:
     image: ghcr.io/willitmod/axebch2-app:0.2.0.3-dev
     user: "1000:1000"
     restart: unless-stopped
+    networks:
+      - axebch_net
     ports:
-      - "8095:3000" # VERANDERING: Dit maakt de WebUI bereikbaar op http://<ip-van-je-zimaos>:8095
+      - "8095:3000"
     depends_on:
       init_permissions:
         condition: service_completed_successfully
@@ -41,16 +40,16 @@ services:
       APP_RELEASE_PHASE: "ALPHA"
       APP_SELF_RESTART_ENABLED: "1"
       APP_COMPOSE_PROJECT: "axebch2"
-      NETWORK_IP: "${NETWORK_IP}" # Vul hier eventueel het echte LAN-IP van je ZimaOS in
+      NETWORK_IP: "127.0.0.1" 
       BCH2_NODE_IMAGE: "ghcr.io/willitmod/axebch2-node:0.1.33-dev"
       CKPOOL_IMAGE: "ghcr.io/willitmod/axebch2-ckpool:0.1.33-dev"
       BCH2_RPC_HOST: "bch2"
       BCH2_RPC_PORT: "8342"
       BCH2_RPC_USER: "bch2"
-      BCH2_RPC_PASS: "${APP_PASSWORD}" # VERANDERING: Vervang door een eigen wachtwoord
+      BCH2_RPC_PASS: "GEHEIM_WACHTWOORD_HIER" # Zorg dat deze gelijk is aan RPC_PASSWORD hieronder
       CKPOOL_STRATUM_HOST: "ckpool"
       CKPOOL_STRATUM_PORT: "3333"
-      JWT_SECRET: "${JWT_SECRET}"    # VERANDERING: Vervang door een willekeurige lange reeks letters/cijfers
+      JWT_SECRET: "WILLEKEURIGE_REEKS_TEKST_HIER" # Verander dit in een willekeurige code (bijv. d8f29as7d)
     healthcheck:
       test:
         - CMD-SHELL
@@ -64,16 +63,18 @@ services:
     image: ghcr.io/willitmod/axebch2-node:0.1.33-dev
     restart: unless-stopped
     stop_grace_period: 15m30s
+    networks:
+      - axebch_net
     depends_on:
       init_permissions:
         condition: service_completed_successfully
     environment:
       NETWORK: "mainnet"
       RPC_USER: "bch2"
-      RPC_PASSWORD: "${APP_PASSWORD}" # VERANDERING: Moet gelijk zijn aan BCH2_RPC_PASS hierboven
+      RPC_PASSWORD: "GEHEIM_WACHTWOORD_HIER" # Moet exact gelijk zijn aan BCH2_RPC_PASS
       RPC_PORT: "8342"
       P2P_PORT: "8339"
-      EXTERNAL_IP: "${NETWORK_IP}"               # Vul hier eventueel het echte LAN-IP van je ZimaOS in
+      EXTERNAL_IP: "127.0.0.1"
       FORCE_IPV4_BIND: "1"
       PRUNE: "0"
       RPC_THREADS: "4"
@@ -104,6 +105,8 @@ services:
     image: ghcr.io/willitmod/axebch2-ckpool:0.1.33-dev
     restart: unless-stopped
     stop_grace_period: 30s
+    networks:
+      - axebch_net
     depends_on:
       init_permissions:
         condition: service_completed_successfully
@@ -113,9 +116,9 @@ services:
       BCH2_RPC_HOST: "bch2"
       BCH2_RPC_PORT: "8342"
       BCH2_RPC_USER: "bch2"
-      BCH2_RPC_PASSWORD: "${APP_PASSWORD}" # VERANDERING: Moet gelijk zijn aan de rest
+      BCH2_RPC_PASSWORD: "GEHEIM_WACHTWOORD_HIER" # Moet exact gelijk zijn aan de rest
       BCH2_ZMQ_HASHBLOCK_PORT: "28342"
-      PAYOUT_ADDRESS: "CHANGEME_BCH_PAYOUT_ADDRESS" # Belangrijk: Pas dit aan naar je eigen BCH adres!
+      PAYOUT_ADDRESS: "CHANGEME_BCH_PAYOUT_ADDRESS" # Pas dit aan naar je eigen BCH adres!
       MINDIFF: "1"
       STARTDIFF: "16"
       MAXDIFF: "0"
@@ -134,7 +137,11 @@ services:
       retries: 20
       start_period: 45s
 
-# Integratie met het ZimaOS Dashboard
+# Hier maken we het netwerk aan zodat de containers met elkaar kunnen praten
+networks:
+  axebch_net:
+    driver: bridge
+
 x-casaos:
   author: WillItMod
   category: Crypto
@@ -144,4 +151,3 @@ x-casaos:
   scheme: http
   title:
     en_US: AxeBch2 Dev
-
