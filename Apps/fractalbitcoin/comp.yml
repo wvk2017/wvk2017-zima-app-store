@@ -1,22 +1,6 @@
 version: "3.7"
 
 services:
-  # Dit is de web-interface (het dashboard)
-  app_proxy:
-    image: ghcr.io/willitmod/fracattack-app-proxy:latest
-    restart: unless-stopped
-    ports:
-      - "3080:3000" # <--- Veranderd naar 3080 om conflicten te voorkomen
-    environment:
-      APP_HOST: fracattack-app
-      APP_PORT: 3000
-      JWT_SECRET: "EenWillekeurigeGeheimeTokenHier"
-    networks:
-      - fracattack_network
-    depends_on:
-      fractald:
-        condition: service_started
-
   init:
     image: alpine:3.22.1
     volumes:
@@ -26,7 +10,7 @@ services:
     environment:
       APPS_SUBNET: "172.21.0.0/16"
       RPC_USER: "fractal"
-      RPC_PASSWORD: "MijnVeiligWachtwoordHier"
+      RPC_PASSWORD: "MijnVeiligWachtwoordHier" # Pas aan naar wens
       BTC_P2P_PORT: "28343"
       BTC_RPC_PORT: "28342"
       BTC_ZMQ_HASHBLOCK_PORT: "28345"
@@ -181,7 +165,8 @@ services:
       - /DATA/AppData/fracattack/data/node:/data
       - /DATA/AppData/fracattack/data/templates/fractald-entrypoint.sh:/fractald-entrypoint.sh:ro
     ports:
-      - "28343:28343/tcp"
+      - "28343:28343/tcp" # Bitcoin P2P
+      - "3080:3000"       # <--- De interne webserver (3000) koppelen we direct aan ZimaOS poort 3080
     networks:
       - fracattack_network
     entrypoint: ["/bin/sh", "/fractald-entrypoint.sh"]
