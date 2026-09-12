@@ -1,23 +1,23 @@
 version: "3.7"
 
 services:
-  init:
+  init_permissions:
     image: alpine:3.22.1
-    container_name: fracattack-init
+    restart: "no"
+    networks:
+      - fractal
     volumes:
-      # Omgezet van ${APP_DATA_DIR} naar het standaard ZimaOS AppData pad
       - /DATA/AppData/fracattack/data:/data
       - /DATA/AppData/fracattack:/appdata
       - /DATA/AppData/fracattack/data/templates:/data/templates:rw
     environment:
-      APPS_SUBNET: "172.21.0.0/16" # Standaard fallback IP i.p.v. Umbrel variabele
+      APPS_SUBNET: "172.16.0.0/16"
       RPC_USER: "fractal"
-      RPC_PASSWORD: "MijnVeiligWachtwoordHier" # Pas aan naar wens
-      BTC_P2P_PORT: "28343"
-      BTC_RPC_PORT: "28342"
-      BTC_ZMQ_HASHBLOCK_PORT: "28345"
-      PAYOUT_ADDRESS: "bc1qg09gugv3kk2sv8svq7zewmt6ey00gppkctgtzk"
-      JWT_SECRET: "EenWillekeurigeGeheimeTokenHier"
+      RPC_PASSWORD: "MijnVeiligWachtwoord123" # Pas dit aan naar een uniek wachtwoord
+      P2P_PORT: "28343"
+      RPC_PORT: "28342"
+      ZMQ_HASHBLOCK_PORT: "28345"
+      PAYOUT_ADDRESS: "bc1qp05vuzc5x4ym3cujh666xm6mzh0q6yqmkmtndl" # Vervang door jouw eigen Bitcoin-adres
     command:
       - /bin/sh
       - -ec
@@ -153,19 +153,100 @@ services:
           chown 1000:1000 /data/pool/config/ckpool.args || true
         fi
 
+  app:
+    image: ghcr.io/willitmod/fracattack-app-umbrel-dev:0.1.4-dev
+    user: "1000:1000"
+    restart: on-failure
+    networks:
+      - fractal
+    ports:
+      - "8095:3000/tcp"
+    depends_on:
+      init_permissions:
+        condition: service_completed_successfully
+    volumes:
+      - /DATA/AppData/fracattack/data:/data
+    environment:
+      RPC_HOST: "fractald"
+      RPC_PORT: "28342"
+      P2P_PORT: "28343"
+      RPC_USER: "fractal"
+      RPC_PASS: "MijnVeiligWachtwoord123" # Moet exact gelijk zijn aan RPC_PASSWORD hierboven
+      CKPOOL_STATUS_DIR: "/data/pool/www/pool"
+      CKPOOL_STRATUM_HOST: "ckpool"
+      CKPOOL_STRATUM_PORT: "3333"
+      APP_VERSION: "0.1.3"
+      APP_CHANNEL: "DEV"
+      APP_VERSION_SUFFIX: "-dev"
+      FRACTAL_IMAGE: "ghcr.io/willitmod/fracattack-fractald:0.3.1-dev"
+      CKPOOL_IMAGE: "ghcr.io/willitmod/docker-ckpool-solo:590fb2a"
+      STATIC_DIR: "/app/static"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 90s
+
   fractald:
     image: ghcr.io/willitmod/fracattack-fractald:0.3.1-dev
-    container_name: fracattack-app
     user: "1000:1000"
     restart: unless-stopped
     stop_grace_period: 15m30s
+    networks:
+      - fractal
     depends_on:
-      init:
+      init_permissions:
         condition: service_completed_successfully
     volumes:
       - /DATA/AppData/fracattack/data/node:/data
       - /DATA/AppData/fracattack/data/templates/fractald-entrypoint.sh:/fractald-entrypoint.sh:ro
     ports:
-      - "28343:28343/tcp" # Bitcoin P2P netwerkpoort
-      - "3080:3000"       # <--- Dit zet de interne webinterface (3000) direct door naar ZimaOS poort 3080
+      - "28343:28343/tcp"
     entrypoint: ["/bin/sh", "/fractald-entrypoint.sh"]
+    healthcheck:
+      test: ["CMD-SHELL", "bitcoin-cli -datadir=/data -rpcclienttimeout=20 getnetworkinfo >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      retries: 20
+      start_period: 2m
+
+  ckpool:
+    image: ghcr.io/willitmod/docker-ckpool-solo:590fb2a
+    restart: unless-stopped
+    stop_grace_period: 30s
+    networks:
+      - axebch_net
+    depends_on:
+      init_permissions:
+        condition: service_completed_successfully
+      fractald:
+        condition: service_started
+    user: "1000:1000"
+    entrypoint: ["/bin/sh", "/ckpool-entrypoint.sh"]
+    ports:
+      - "7891:3333/tcp"
+    volumes:
+      - /DATA/AppData/fracattack/data/pool/config:/config:ro
+      - /DATA/AppData/fracattack/data/pool/www:/www
+      - /DATA/AppData/fracattack/data/templates/ckpool-entrypoint.sh:/ckpool-entrypoint.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 3333"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 45s
+
+networks:
+  Fractal_net:
+    driver: bridge
+
+x-casaos:
+  author: WVK2017
+  category: Crypto
+  icon: https://githubusercontent.com
+  index: /
+  port_map: "8095"
+  scheme: http
+  title:
+    en_US: fractald Dev
