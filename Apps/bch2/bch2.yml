@@ -74,6 +74,7 @@ services:
       RPC_PASSWORD: AxeBchNodePass2026 # <--- MOET EXACT GELIJK ZIJN AAN BCH2_RPC_PASS
       RPC_PORT: "8342"
       P2P_PORT: "8339"
+      ZMQ_HASHBLOCK: "tcp://0.0.0.0:28342
       EXTERNAL_IP: "127.0.0.1"
       FORCE_IPV4_BIND: "1"
       PRUNE: "0"
