@@ -1,0 +1,158 @@
+version: "3.7"
+
+services:
+  # 1. Init container: Maakt automatisch alle mappen aan met de juiste 1000:1000 rechten
+  init_permissions:
+    image: alpine:3.22.1
+    container_name: frackatack-init
+    restart: "no"
+    networks:
+      - frackatack 
+    volumes:
+      - /DATA/AppData/frackatack/data:/data
+    command:
+      - /bin/sh
+      - -ec
+      - |-
+        set -eu
+        mkdir -p /data/ui/state /data/node /data/pool/config /data/pool/www/pool /data/pool/www/users
+        chown -R 1000:1000 /data/ui /data/node /data/pool || true
+        chmod -R ug+rwX /data/ui /data/node /data/pool || true
+
+  # 2. De Frackatack Web UI App Dashboard
+  app:
+    image: ghcr.io/willitmod/fracattack-app-umbrel-dev:0.1.4
+    container_name: frackatack-app
+    user: "1000:1000"
+    restart: unless-stopped
+    networks:
+      - frackatack
+    ports:
+      - "21225:3000/tcp" # UI bereikbaar op poort 21225
+    depends_on:
+      init_permissions:
+        condition: service_completed_successfully
+      fractal:
+        condition: service_started
+    volumes:
+      - /DATA/AppData/frackatack/data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      APP_ID: "willitmod-dev-frackatack"
+      APP_VERSION: "0.1.3"
+      APP_CHANNEL: "RC1"
+      APP_RELEASE_PHASE: "ALPHA"
+      APP_SELF_RESTART_ENABLED: "1"
+      APP_COMPOSE_PROJECT: "frackatack"
+      NETWORK_IP: "127.0.0.1" 
+      FB_NODE_IMAGE: "ghcr.io/willitmod/fracattack-fractald:0.3.1"
+      CKPOOL_IMAGE: "ghcr.io/willitmod/docker-ckpool-solo:590fb2a"
+      fb_RPC_HOST: "fractal"
+      FB_RPC_PORT: "28342"
+      FB_RPC_USER: "fractal"
+      FB_RPC_PASS: "MijnSuperVeiligWachtwoord123"
+      CKPOOL_STRATUM_HOST: "ckpool"
+      CKPOOL_STRATUM_PORT: "3333"
+      JWT_SECRET: "sajkdh9a23hf8923hfshdf23"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - python -c "import sys, urllib.request; r=urllib.request.urlopen('http://127.0.0.1:3000/api/about', timeout=3); sys.exit(0 if r.status == 200 else 1)"
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 90s
+
+  # 3. De Fractal Bitcoin Core Node (In het script bch2 genoemd, gekoppeld aan de alias 'fractal')
+  fractal:
+    image: ghcr.io/willitmod/fracattack-fractald:0.3.1
+    container_name: frackatack-node
+    restart: unless-stopped
+    stop_grace_period: 15m30s
+    user: "0:0"
+    networks:
+      frackatack:
+        aliases:
+          - fractal # Zorgt dat de app en ckpool deze container kunnen vinden onder de naam 'fractal'
+    depends_on:
+      init_permissions:
+        condition: service_completed_successfully
+    environment:
+      NETWORK: "mainnet"
+      RPC_USER: "fractal"
+      RPC_PASSWORD: "MijnSuperVeiligWachtwoord123"
+      RPC_PORT: "28342"
+      P2P_PORT: "28343"
+      ZMQ_HASHBLOCK: "tcp://0.0.0.0:28345"
+      EXTERNAL_IP: "127.0.0.1"
+      FORCE_IPV4_BIND: "1"
+      PRUNE: "0"
+      RPC_THREADS: "4"
+      MAX_MEMPOOL: "64"
+      DB_CACHE: "256"
+      TX_INDEX: "1"
+    volumes:
+      - /DATA/AppData/frackatack/data/node:/data
+    ports:
+      - "28343:28343/tcp"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - bitcoin-cli -datadir=/data -rpcuser="fractal" -rpcpassword="MijnSuperVeiligWachtwoord123" getblockchaininfo >/dev/null 2>&1
+      interval: 30s
+      timeout: 10s
+      retries: 20
+      start_period: 2m
+
+  # 4. De CKPool Stratum Engine (Volledig gestuurd via de officiële parameters en volume mount)
+  ckpool:
+    image: ghcr.io/willitmod/docker-ckpool-solo:590fb2a
+    container_name: frackatack-ckpool
+    restart: unless-stopped
+    stop_grace_period: 30s
+    networks:
+      - frackatack
+    depends_on:
+      init_permissions:
+        condition: service_completed_successfully
+      fractal:
+        condition: service_started
+    environment:
+      FB_RPC_HOST: "fractal"
+      FB_RPC_PORT: "28342"
+      FB_RPC_USER: "fractal"
+      FB_RPC_PASSWORD: "MijnSuperVeiligWachtwoord123"
+      FB_ZMQ_HASHBLOCK_PORT: "28345"
+      PAYOUT_ADDRESS: "bc1qg09gugv3kk2sv8svq7zewmt6ey00gppkctgtzk" # <-- Pas eventueel aan naar je eigen wallet
+      MINDIFF: "1"
+      STARTDIFF: "16"
+      MAXDIFF: "0"
+    user: "0:0" # Als root gestart zodat hij de config direct mag genereren via de binary
+    command: ["ckpool", "-k", "-L", "-c", "/config/ckpool.conf", "-B"]
+    ports:
+      - "7891:3333/tcp" # Miners verbinden op poort 7891
+    volumes:
+      - /DATA/AppData/frackatack/data/pool/config:/config
+      - /DATA/AppData/frackatack/data/pool/www:/www
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - '[ -f /config/ckpool.conf ] || exit 1'
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 45s
+
+networks:
+  frackatack:
+    driver: bridge
+
+x-casaos:
+  author: WVK2017
+  category: Crypto
+  icon: https://githubusercontent.com
+  index: /
+  port_map: "21225"
+  scheme: http
+  title:
+    custom: Frackatack Solo Pool
