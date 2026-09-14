@@ -47,10 +47,10 @@ services:
       NETWORK_IP: "127.0.0.1" 
       FB_NODE_IMAGE: "ghcr.io/willitmod/fracattack-fractald:0.3.1"
       CKPOOL_IMAGE: "ghcr.io/willitmod/docker-ckpool-solo:590fb2a"
-      fb_RPC_HOST: "fractal"
-      FB_RPC_PORT: "28342"
-      FB_RPC_USER: "fractal"
-      FB_RPC_PASS: "MijnSuperVeiligWachtwoord123"
+      RPC_HOST: "fractal"
+      RPC_PORT: "28342"
+      RPC_USER: "fractal"
+      RPC_PASS: "MijnSuperVeiligWachtwoord123"
       CKPOOL_STRATUM_HOST: "ckpool"
       CKPOOL_STRATUM_PORT: "3333"
       JWT_SECRET: "sajkdh9a23hf8923hfshdf23"
@@ -118,11 +118,11 @@ services:
       fractal:
         condition: service_started
     environment:
-      FB_RPC_HOST: "fractal"
-      FB_RPC_PORT: "28342"
-      FB_RPC_USER: "fractal"
-      FB_RPC_PASSWORD: "MijnSuperVeiligWachtwoord123"
-      FB_ZMQ_HASHBLOCK_PORT: "28345"
+      RPC_HOST: "fractal"
+      RPC_PORT: "28342"
+      RPC_USER: "fractal"
+      RPC_PASSWORD: "MijnSuperVeiligWachtwoord123"
+      ZMQ_HASHBLOCK_PORT: "28345"
       PAYOUT_ADDRESS: "bc1qg09gugv3kk2sv8svq7zewmt6ey00gppkctgtzk" # <-- Pas eventueel aan naar je eigen wallet
       MINDIFF: "1"
       STARTDIFF: "16"
