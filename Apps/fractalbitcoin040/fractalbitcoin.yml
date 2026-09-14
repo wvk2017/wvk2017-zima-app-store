@@ -1,0 +1,142 @@
+networks:
+  fracattack_net:
+    name: fracattack_net
+    driver: bridge
+    ipam: {}
+    external: false
+services:
+  app:
+    command: null
+    container_name: fracattack-app
+    depends_on:
+      ckpool:
+        condition: service_started
+        required: true
+      fractald:
+        condition: service_started
+        required: true
+    deploy:
+      resources:
+        limits:
+          memory: 4GB
+          cpus: "1.00"
+        reservations:
+          memory: 256MB
+          cpus: "0.00"
+      placement: {}
+    entrypoint: null
+    environment:
+      APP_CHANNEL: RC1
+      APP_VERSION: 0.1.3
+      BTC_P2P_PORT: "28343"
+      BTC_RPC_HOST: fractald
+      BTC_RPC_PASS: MijnSuperVeiligWachtwoord123
+      BTC_RPC_PORT: "28342"
+      BTC_RPC_USER: fractal
+      CKPOOL_STATUS_DIR: /data/pool/www/pool
+      CKPOOL_STRATUM_HOST: ckpool
+      CKPOOL_STRATUM_PORT: "3333"
+    image: ghcr.io/willitmod/fracattack-app-umbrel-dev:0.1.4
+    networks:
+      - fracattack_net
+    ports:
+      - mode: ingress
+        target: 3000
+        published: "21225"
+        protocol: tcp
+    restart: unless-stopped
+    stop_grace_period: 30s
+    user: 1000:1000
+    volumes:
+      - type: bind
+        source: /DATA/AppData/fracattack/data
+        target: /data
+        bind:
+          create_host_path: true
+  ckpool:
+    command: null
+    container_name: fracattack-ckpool
+    depends_on:
+      fractald:
+        condition: service_started
+        required: true
+    deploy:
+      resources:
+        limits:
+          memory: 4GB
+          cpus: "1.00"
+        reservations:
+          memory: 256MB
+          cpus: "0.00"
+      placement: {}
+    entrypoint:
+      - ckpool
+      - -c
+      - /config/ckpool.conf
+      - -B
+    image: ghcr.io/willitmod/docker-ckpool-solo:590fb2a
+    networks:
+      - fracattack_net
+    ports:
+      - mode: ingress
+        target: 3333
+        published: "7891"
+        protocol: tcp
+    restart: unless-stopped
+    stop_grace_period: 30s
+    user: 1000:1000
+    volumes:
+      - type: bind
+        source: /DATA/AppData/fracattack/data/pool/config
+        target: /config
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /DATA/AppData/fracattack/data/pool/www
+        target: /www
+        bind:
+          create_host_path: true
+  fractald:
+    command: null
+    container_name: fracattack-fractald
+    deploy:
+      resources:
+        limits:
+          memory: 4GB
+          cpus: "1.00"
+        reservations:
+          memory: 256MB
+          cpus: "0.00"
+      placement: {}
+    entrypoint:
+      - fractald
+      - -datadir=/data
+      - -conf=/data/bitcoin.conf
+    image: ghcr.io/willitmod/fracattack-fractald:0.3.1
+    networks:
+      - fracattack_net
+    ports:
+      - mode: ingress
+        target: 28343
+        published: "28343"
+        protocol: tcp
+    restart: unless-stopped
+    stop_grace_period: 15m30s
+    user: 1000:1000
+    volumes:
+      - type: bind
+        source: /DATA/AppData/fracattack/data/node
+        target: /data
+        bind:
+          create_host_path: true
+x-casaos:
+  hostname: ""
+  index: /
+  is_uncontrolled: false
+  main: app
+  port_map: "21225"
+  scheme: http
+  store_app_id: compose-1839bc1895c98ec1
+  title:
+    custom: fractalbitcoin
+name: compose-6a5d7b11ceb0f60f
