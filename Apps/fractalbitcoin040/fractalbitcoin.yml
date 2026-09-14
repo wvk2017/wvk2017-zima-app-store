@@ -115,6 +115,21 @@ services:
     image: ghcr.io/willitmod/fracattack-fractald:0.3.1
     networks:
       - fracattack_net
+      command:
+      - bitcoind
+      - -server=1
+      - -txindex=1
+      - -rpcuser=fractal
+      - -rpcpassword=MijnSuperVeiligWachtwoord123
+      - -port=28343
+      - -rpcport=28342
+      - -rpcallowip=0.0.0.0/0
+      - -dnsseed=1
+      - -fixedseeds=1
+      - -forcednsseed=1
+      - -seednode=x9.dnsseed-mainnet.fractalbitcoin.io
+      - -seednode=x9.dnsseed-mainnet.unisat.io
+      - -datadir=/data
     ports:
       - mode: ingress
         target: 28343
