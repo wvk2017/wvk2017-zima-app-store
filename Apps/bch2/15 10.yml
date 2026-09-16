@@ -43,7 +43,7 @@ services:
       NETWORK_IP: "127.0.0.1" 
       FB_NODE_IMAGE: "ghcr.io/willitmod/frackatack-node:"
       CKPOOL_IMAGE: "ghcr.io/willitmod/frackatack-ckpool:"
-      fb_RPC_HOST: "fractal"
+      FB_RPC_HOST: "fractal"
       FB_RPC_PORT: ""
       FB_RPC_USER: "feactal"
       FB_RPC_PASS:  # <--- VERANDER DIT IN JOUW EIGEN WACHTWOORD
@@ -59,7 +59,7 @@ services:
       retries: 20
       start_period: 90s
 
-  bch2:
+  FB:
     image: ghcr.io/willitmod/frackatack-node:
     restart: unless-stopped
     stop_grace_period: 15m30s
@@ -111,7 +111,7 @@ services:
     depends_on:
       init_permissions:
         condition: service_completed_successfully
-      bch2:
+      FB:
         condition: service_started
     environment:
       FB_RPC_HOST: "fractal"
