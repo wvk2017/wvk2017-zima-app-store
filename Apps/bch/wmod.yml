@@ -1,0 +1,137 @@
+version: "3.7"
+
+services:
+  app_proxy:
+    image: alpine:3.22.1
+    container_name: bch-app-proxy
+    restart: unless-stopped
+    command: ["sh", "-c", "echo 'Proxy actief op poort 3000'; sleep infinity"]
+    environment:
+      APP_HOST: axebch-app
+      APP_PORT: 3000
+      JWT_SECRET: "willekeurige_geheime_sleutel_hier" # Vervang dit door een eigen unieke sleutel
+    ports:
+      - "3000:3000"
+
+  init:
+    image: alpine:3.22.1
+    container_name: bch-init
+    volumes:
+      - /DATA/AppData/willitmod-dev-bch/data:/data
+      - /DATA/AppData/willitmod-dev-bch:/appdata
+    environment:
+      APPS_SUBNET: "172.18.0.0/16"
+      RPC_USER: "bch"
+      RPC_PASSWORD: "bch_veilig_wachtwoord" # Pas dit aan indien gewenst
+      BCH_P2P_PORT: "28333"
+      BCH_RPC_PORT: "28332"
+      BCH_ZMQ_HASHBLOCK_PORT: "28334"
+      PAYOUT_ADDRESS: "CHANGEME_BCH_PAYOUT_ADDRESS"
+    command:
+      - /bin/sh
+      - -ec
+      - |-
+        set -eu
+        apk add --no-cache envsubst curl >/dev/null
+
+        if [ -n "${JWT_SECRET:-}" ]; then
+          envfile="/appdata/.env"
+          tmp="/appdata/.env.tmp"
+          if [ -f "$$envfile" ]; then
+            grep -v '^JWT_SECRET=' "$$envfile" > "$$tmp" || true
+          else
+            : > "$$tmp"
+          fi
+          printf "JWT_SECRET=%s\n" "${JWT_SECRET}" >> "$$tmp"
+          chmod 600 "$$tmp" || true
+          chown 1000:1000 "$$tmp" || true
+          mv "$$tmp" "$$envfile"
+        fi
+
+        mkdir -p /data/node /data/pool/config /data/pool/www/pool /data/pool/www/users /data/templates
+        touch /appdata/settings.yml
+        chown 1000:1000 /appdata/settings.yml || true
+
+        if [ -d /data/templates/init-entrypoint.sh ]; then
+          rm -rf /data/templates/init-entrypoint.sh || true
+        fi
+
+        if [ ! -f /data/node/bitcoin.conf ]; then
+          # Genereer basisconfiguratie als deze nog niet bestaat
+          echo "rpcuser=bch" > /data/node/bitcoin.conf
+          echo "rpcpassword=bch_veilig_wachtwoord" >> /data/node/bitcoin.conf
+          echo "rpcbind=0.0.0.0" >> /data/node/bitcoin.conf
+          echo "rpcallowip=0.0.0.0/0" >> /data/node/bitcoin.conf
+          echo "maxconnections=256" >> /data/node/bitcoin.conf
+          chown -R 1000:1000 /data/node
+        fi
+
+  bchn:
+    image: ghcr.io/willitmod/bitcoin-cash-node:v29.0.0-wm3
+    container_name: bch-node
+    user: "1000:1000"
+    restart: unless-stopped
+    stop_grace_period: 15m30s
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    ports:
+      - "28333:28333/tcp" # P2P Originele poort
+      - "28332:28332/tcp" # RPC Originele poort
+    volumes:
+      - /DATA/AppData/willitmod-dev-bch/data/node:/data
+      - /DATA/AppData/willitmod-dev-bch/data/templates/bchn-entrypoint.sh:/bchn-entrypoint.sh:ro
+    entrypoint: ["/bin/sh", "/bchn-entrypoint.sh"]
+
+  ckpool:
+    image: ghcr.io/willitmod/wim-solo-ckpool:0.8.3-rc1-590fb2a
+    container_name: bch-ckpool
+    entrypoint: ["/bin/sh"]
+    command:
+      - -ec
+      - |-
+        rm -f /tmp/ckpool/*.pid 2>/dev/null || true
+        if command -v ckpool >/dev/null 2>&1; then
+          exec ckpool -k -B -L -c /config/ckpool.conf
+        elif [ -x /bin/ckpool ]; then
+          exec /bin/ckpool -k -B -L -c /config/ckpool.conf
+        else
+          echo "ckpool binary niet gevonden"
+          exit 1
+        fi
+    user: "1000:1000"
+    depends_on:
+      - bchn
+    restart: on-failure
+    stop_grace_period: 30s
+    ports:
+      - "4567:3333/tcp" # Originele Stratum poort mapping
+    volumes:
+      - /DATA/AppData/willitmod-dev-bch/data/pool/config:/config:ro
+      - /DATA/AppData/willitmod-dev-bch/data/pool/www:/www
+
+  app:
+    image: ghcr.io/willitmod/axebch-app-umbrel-dev:0.9.18
+    container_name: axebch-app
+    user: "1000:1000"
+    restart: on-failure
+    stop_grace_period: 30s
+    depends_on:
+      - bchn
+      - ckpool
+    ports:
+      - "8083:80" # Web interface poort bereikbaar via ZimaOS
+    volumes:
+      - /DATA/AppData/willitmod-dev-bch/data:/data
+    environment:
+      NETWORK_IP: "172.18.0.0"
+      BCH_RPC_HOST: "bchn"
+      BCH_RPC_PORT: "28332"
+      BCH_RPC_USER: "bch"
+      BCH_RPC_PASS: "bch_veilig_wachtwoord"
+      CKPOOL_STATUS_DIR: "/data/pool/www/pool"
+      CKPOOL_STRATUM_HOST: "ckpool"
+      CKPOOL_STRATUM_PORT: "3333"
+      APP_CHANNEL: "RC1"
+      APP_VERSION_SUFFIX: ""
+      STATIC_DIR: "/app/static"
