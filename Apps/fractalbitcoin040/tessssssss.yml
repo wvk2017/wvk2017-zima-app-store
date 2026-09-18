@@ -1,0 +1,247 @@
+networks:
+  frackatack_net:
+    name: compose-1dc236b20696ab64_frackatack_net
+    driver: bridge
+    ipam: {}
+    external: false
+services:
+  app:
+    command: null
+    depends_on:
+      fractal:
+        condition: service_started
+        required: true
+      init_permissions:
+        condition: service_completed_successfully
+        required: true
+    deploy:
+      resources:
+        limits:
+          memory: 4GB
+          cpus: "1.00"
+        reservations:
+          memory: 256MB
+          cpus: "0.00"
+      placement: {}
+    entrypoint: null
+    environment:
+      APP_CHANNEL: RC1
+      APP_COMPOSE_PROJECT: frackatack
+      APP_ID: willitmod-dev-frackatack
+      APP_RELEASE_PHASE: ALPHA
+      APP_SELF_RESTART_ENABLED: "1"
+      APP_VERSION: 0.1.3
+      BTC_CKPOOL_IMAGE: ghcr.io/willitmod/docker-ckpool-solo:590fb2a
+      BTC_NODE_IMAGE: ghcr.io/willitmod/fracattack-fractald:0.3.1
+      BTC_RPC_HOST: fractal
+      BTC_RPC_PASS: MijnSuperVeiligWachtwoord123
+      BTC_RPC_PORT: "28342"
+      BTC_RPC_USER: fractal
+      CKPOOL_STRATUM_HOST: ckpool
+      CKPOOL_STRATUM_PORT: "3333"
+      JWT_SECRET: sajkdh9a23hf8923hfshdf23
+      NETWORK_IP: 127.0.0.1
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - python -c "import sys, urllib.request;
+          r=urllib.request.urlopen('http://127.0.0', timeout=3); sys.exit(0 if
+          r.status == 200 else 1)"
+      timeout: 5s
+      interval: 15s
+      retries: 20
+      start_period: 1m30s
+    image: ghcr.io/willitmod/fracattack-app-umbrel-dev:0.1.4
+    labels:
+      icon: https://raw.githubusercontent.com/WillItMod/5tratStore-dev/refs/heads/main/willitmod-dev-fracattack/icon.png
+    networks:
+      - frackatack_net
+    ports:
+      - mode: ingress
+        target: 3000
+        published: "21225"
+        protocol: tcp
+    restart: unless-stopped
+    user: 1000:1000
+    volumes:
+      - type: bind
+        source: /media/ZimaOS-HD/NodeData/frackatack
+        target: /data
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+        bind:
+          create_host_path: true
+  ckpool:
+    command:
+      - -k
+      - -L
+      - -c
+      - /data/pool/config/ckpool.conf
+    depends_on:
+      fractal:
+        condition: service_started
+        required: true
+      init_permissions:
+        condition: service_completed_successfully
+        required: true
+    deploy:
+      resources:
+        limits:
+          memory: 4GB
+          cpus: "1.00"
+        reservations:
+          memory: 256MB
+          cpus: "0.00"
+      placement: {}
+    entrypoint: null
+    environment:
+      BTC_RPC_HOST: fractal
+      BTC_RPC_PASSWORD: MijnSuperVeiligWachtwoord123
+      BTC_RPC_PORT: "28342"
+      BTC_RPC_USER: fractal
+      BTC_ZMQ_HASHBLOCK_PORT: "28345"
+      MAXDIFF: "0"
+      MINDIFF: "1"
+      PAYOUT_ADDRESS: bc1qg09gugv3kk2sv8svq7zewmt6ey00gppkctgtzk
+      STARTDIFF: "16"
+    image: ghcr.io/willitmod/docker-ckpool-solo:590fb2a
+    labels:
+      icon: https://raw.githubusercontent.com/WillItMod/5tratStore-dev/refs/heads/main/willitmod-dev-fracattack/icon.png
+    networks:
+      - frackatack_net
+    ports:
+      - mode: ingress
+        target: 3333
+        published: "7891"
+        protocol: tcp
+    restart: unless-stopped
+    stop_grace_period: 30s
+    user: 0:0
+    volumes:
+      - type: bind
+        source: /media/ZimaOS-HD/NodeData/frackatack/pool
+        target: /data/pool
+        bind:
+          create_host_path: true
+      - type: tmpfs
+        target: /www
+  fractal:
+    command: null
+    depends_on:
+      init_permissions:
+        condition: service_completed_successfully
+        required: true
+    deploy:
+      resources:
+        limits:
+          memory: 4GB
+          cpus: "1.00"
+        reservations:
+          memory: 256MB
+          cpus: "0.00"
+      placement: {}
+    entrypoint: null
+    environment:
+      DB_CACHE: "256"
+      EXTERNAL_IP: 127.0.0.1
+      FORCE_IPV4_BIND: "1"
+      MAX_MEMPOOL: "64"
+      NETWORK: mainnet
+      P2P_PORT: "28343"
+      PRUNE: "10000"
+      RPC_PASSWORD: MijnSuperVeiligWachtwoord123
+      RPC_PORT: "28342"
+      RPC_THREADS: "4"
+      RPC_USER: fractal
+      TX_INDEX: "0"
+      ZMQ_HASHBLOCK: tcp://0.0.0.0:28345
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - bitcoin-cli -datadir=/data/node -rpcuser="fractal"
+          -rpcpassword="MijnSuperVeiligWachtwoord123" -rpcport=28342
+          getblockchaininfo >/dev/null 2>&1
+      timeout: 10s
+      interval: 30s
+      retries: 20
+      start_period: 2m0s
+    image: ghcr.io/willitmod/fracattack-fractald:0.3.1
+    labels:
+      icon: https://raw.githubusercontent.com/WillItMod/5tratStore-dev/refs/heads/main/willitmod-dev-fracattack/icon.png
+    networks:
+      - frackatack_net
+    ports:
+      - mode: ingress
+        target: 28343
+        published: "28343"
+        protocol: tcp
+    restart: unless-stopped
+    stop_grace_period: 15m30s
+    volumes:
+      - type: bind
+        source: /media/ZimaOS-HD/NodeData/frackatack/node
+        target: /data/node
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /media/ZimaOS-HD/NodeData/frackatack/node
+        target: /home/ubuntu/.bitcoin
+        bind:
+          create_host_path: true
+  init_permissions:
+    command:
+      - /bin/sh
+      - -ec
+      - |-
+        set -eu
+        mkdir -p /data/ui/state /data/node /data/pool/config /data/pool/www/pool /data/pool/www/users
+
+        # Schrijf het bitcoin.conf sjabloon met ingevulde variabelen direct naar de schijf
+        printf "server=1\ntxindex=0\nlisten=1\ndiscover=1\nprune=10000\nmaxconnections=256\ndnsseed=1\nfixedseeds=1\forcednsseed=1\n" > /data/node/bitcoin.conf
+        printf "seednode=x9.dnsseed-mainnet.fractalbitcoin.io\nseednode=x9.dnsseed-mainnet.unisat.io\n" >> /data/node/bitcoin.conf
+        printf "addnode=x9.dnsseed-mainnet.fractalbitcoin.io\naddnode=x9.dnsseed-mainnet.unisat.io\n" >> /data/node/bitcoin.conf
+        printf "port=28343\nrpcport=28342\n" >> /data/node/bitcoin.conf
+        printf "rpcuser=fractal\nrpcpassword=MijnSuperVeiligWachtwoord123\n" >> /data/node/bitcoin.conf
+        printf "rpcbind=0.0.0.0\nrpcallowip=0.0.0.0/0\n" >> /data/node/bitcoin.conf
+        printf "zmqpubhashblock=tcp://0.0.0.0:28345\n" >> /data/node/bitcoin.conf
+
+        chown -R 1000:1000 /data/ui /data/node /data/pool || true
+        chmod -R 777 /data/ui /data/node /data/pool || true
+    deploy:
+      resources:
+        limits:
+          memory: 4GB
+          cpus: "1.00"
+        reservations:
+          memory: 256MB
+          cpus: "0.00"
+      placement: {}
+    entrypoint: null
+    image: alpine:3.22.1
+    labels:
+      icon: https://raw.githubusercontent.com/WillItMod/5tratStore-dev/refs/heads/main/willitmod-dev-fracattack/icon.png
+    networks:
+      - frackatack_net
+    restart: no
+    volumes:
+      - type: bind
+        source: /media/ZimaOS-HD/NodeData/frackatack
+        target: /data
+        bind:
+          create_host_path: true
+x-casaos:
+  author: WVK2017
+  category: Crypto
+  hostname: ""
+  icon: https://raw.githubusercontent.com/WillItMod/5tratStore-dev/refs/heads/main/willitmod-dev-fracattack/icon.png
+  index: /
+  is_uncontrolled: false
+  main: init_permissions
+  port_map: "21225"
+  scheme: http
+  store_app_id: compose-19afac31fd0ecfeb
+  title:
+    custom: Frackatack Solo Pool
