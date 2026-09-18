@@ -53,7 +53,7 @@ services:
       start_period: 1m30s
     image: ghcr.io/willitmod/fracattack-app-umbrel-dev:0.1.4
     labels:
-      icon: https://githubusercontent.com
+      icon: https://raw.githubusercontent.com/WillItMod/5tratStore-dev/refs/heads/main/willitmod-dev-fracattack/icon.png
     networks:
       - frackatack_net
     ports:
@@ -109,7 +109,7 @@ services:
       STARTDIFF: "16"
     image: ghcr.io/willitmod/docker-ckpool-solo:590fb2a
     labels:
-      icon: https://githubusercontent.com
+      icon: https://raw.githubusercontent.com/WillItMod/5tratStore-dev/refs/heads/main/willitmod-dev-fracattack/icon.png
     networks:
       - frackatack_net
     ports:
@@ -170,7 +170,7 @@ services:
       start_period: 2m0s
     image: ghcr.io/willitmod/fracattack-fractald:0.3.1
     labels:
-      icon: https://githubusercontent.com
+      icon: https://raw.githubusercontent.com/WillItMod/5tratStore-dev/refs/heads/main/willitmod-dev-fracattack/icon.png
     networks:
       - frackatack_net
     ports:
@@ -222,7 +222,7 @@ services:
     entrypoint: null
     image: alpine:3.22.1
     labels:
-      icon: https://githubusercontent.com
+      icon: https://raw.githubusercontent.com/WillItMod/5tratStore-dev/refs/heads/main/willitmod-dev-fracattack/icon.png
     networks:
       - frackatack_net
     restart: no
@@ -236,7 +236,7 @@ x-casaos:
   author: WVK2017
   category: Crypto
   hostname: ""
-  icon: https://githubusercontent.com
+  icon: https://raw.githubusercontent.com/WillItMod/5tratStore-dev/refs/heads/main/willitmod-dev-fracattack/icon.png
   index: /
   is_uncontrolled: false
   main: init_permissions
