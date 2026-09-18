@@ -105,7 +105,7 @@ services:
       BTC_ZMQ_HASHBLOCK_PORT: "28345"
       MAXDIFF: "0"
       MINDIFF: "1"
-      PAYOUT_ADDRESS: bc1qp05vuzc5x4ym3cujh666xm6mzh0q6yqmkmtndl
+      PAYOUT_ADDRESS: bc1qg09gugv3kk2sv8svq7zewmt6ey00gppkctgtzk
       STARTDIFF: "16"
     image: ghcr.io/willitmod/docker-ckpool-solo:590fb2a
     labels:
@@ -156,7 +156,7 @@ services:
       RPC_PORT: "28342"
       RPC_THREADS: "4"
       RPC_USER: fractal
-      TX_INDEX: "1"
+      TX_INDEX: "0"
       ZMQ_HASHBLOCK: tcp://0.0.0.0:28345
     healthcheck:
       test:
@@ -199,7 +199,14 @@ services:
         set -eu
         mkdir -p /data/ui/state /data/node /data/pool/config /data/pool/www/pool /data/pool/www/users
 
-        printf "server=1\nrpcuser=fractal\nrpcpassword=MijnSuperVeiligWachtwoord123\nrpcallowip=0.0.0.0/0\nrpcbind=0.0.0.0\nrpcport=28342\nport=28343\n" > /data/node/bitcoin.conf
+        # Schrijf het bitcoin.conf sjabloon met ingevulde variabelen direct naar de schijf
+        printf "server=1\ntxindex=0\nlisten=1\ndiscover=1\nprune=10000\nmaxconnections=256\ndnsseed=1\nfixedseeds=1\forcednsseed=1\n" > /data/node/bitcoin.conf
+        printf "seednode=x9.dnsseed-mainnet.fractalbitcoin.io\nseednode=x9.dnsseed-mainnet.unisat.io\n" >> /data/node/bitcoin.conf
+        printf "addnode=x9.dnsseed-mainnet.fractalbitcoin.io\naddnode=x9.dnsseed-mainnet.unisat.io\n" >> /data/node/bitcoin.conf
+        printf "port=28343\nrpcport=28342\n" >> /data/node/bitcoin.conf
+        printf "rpcuser=fractal\nrpcpassword=MijnSuperVeiligWachtwoord123\n" >> /data/node/bitcoin.conf
+        printf "rpcbind=0.0.0.0\nrpcallowip=0.0.0.0/0\n" >> /data/node/bitcoin.conf
+        printf "zmqpubhashblock=tcp://0.0.0.0:28345\n" >> /data/node/bitcoin.conf
 
         chown -R 1000:1000 /data/ui /data/node /data/pool || true
         chmod -R 777 /data/ui /data/node /data/pool || true
@@ -237,4 +244,4 @@ x-casaos:
   scheme: http
   store_app_id: compose-19afac31fd0ecfeb
   title:
-    custom: frackatack
+    custom: Frackatack Solo Pool
