@@ -3,7 +3,7 @@ version: "3.7"
 services:
   init:
     image: alpine:3.22.1
-    user: "0:0" # Vereist voor chown/chmod acties binnen het script
+    user: "0:0"
     volumes:
       - /media/ZimaOS-HD/NodeData/fracattack/data:/data
       - /media/ZimaOS-HD/NodeData/fracattack:/appdata
@@ -17,7 +17,6 @@ services:
       BTC_RPC_PORT: "28342"
       BTC_ZMQ_HASHBLOCK_PORT: "28345"
       PAYOUT_ADDRESS: "bc1qg09gugv3kk2sv8svq7zewmt6ey00gppkctgtzk"
-      # VERVANG DIT: Kies een willekeurige geheime sleutel voor de API proxy
       JWT_SECRET: "YOUR_CUSTOM_JWT_SECRET_STRING"
     command:
       - /bin/sh
@@ -160,7 +159,7 @@ services:
       BTC_RPC_PORT: "28342"
       BTC_P2P_PORT: "28343"
       BTC_RPC_USER: "fractal"
-      BTC_RPC_PASS: "YOUR_SECURE_PASSWORD" # Moet exact matchen met RPC_PASSWORD hierboven
+      BTC_RPC_PASS: "YOUR_SECURE_PASSWORD" # MUST MATCH RPC_PASSWORD ABOVE
       CKPOOL_STATUS_DIR: "/data/pool/www/pool"
       CKPOOL_STRATUM_HOST: "ckpool"
       CKPOOL_STRATUM_PORT: "3333"
@@ -170,18 +169,6 @@ services:
       FRACTAL_IMAGE: "ghcr.io/willitmod/fracattack-fractald:0.3.1-dev"
       CKPOOL_IMAGE: "ghcr.io/willitmod/docker-ckpool-solo:590fb2a"
       STATIC_DIR: "/app/static"
-
-  app_proxy:
-    image: ghcr.io/getumbrel/app-proxy:v3.4.2
-    restart: always
-    ports:
-      - "21226:80/tcp" # Dit is de poort waarmee je de web UI in de browser opent
-    environment:
-      APP_HOST: app
-      APP_PORT: 3000
-      JWT_SECRET: "YOUR_CUSTOM_JWT_SECRET_STRING" # Moet exact matchen met JWT_SECRET hierboven
-    depends_on:
-      - app
 
   fractald:
     image: ghcr.io/willitmod/fracattack-fractald:0.3.1-dev
@@ -199,7 +186,7 @@ services:
     entrypoint: ["/bin/sh", "/fractald-entrypoint.sh"]
     healthcheck:
       test: ["CMD-SHELL", "bitcoin-cli -datadir=/data -rpcclienttimeout=20 getnetworkinfo >/dev/null 2>&1"]
-      interval: 3
+      interval: 30s
       timeout: 30s
       retries: 60
       start_period: 10m
