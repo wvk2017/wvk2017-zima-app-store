@@ -1,0 +1,119 @@
+networks:
+  frackatack_net:
+    name: compose-custom_frackatack_net
+    driver: bridge
+    ipam: {}
+    external: false
+services:
+  app:
+    command: null
+    deploy:
+      resources:
+        limits:
+          memory: 4GB
+          cpus: "1.00"
+        reservations:
+          memory: 256MB
+          cpus: "0.00"
+      placement: {}
+    entrypoint: null
+    environment:
+      APP_CHANNEL: RC1
+      APP_COMPOSE_PROJECT: frackatack
+      APP_ID: willitmod-dev-fracattack
+      APP_RELEASE_PHASE: ALPHA
+      APP_VERSION: 0.1.4
+      BTC_CKPOOL_IMAGE: ghcr.io/willitmod/docker-ckpool-solo:590fb2a
+      BTC_NODE_IMAGE: ghcr.io/willitmod/fracattack-fractald:0.3.1
+      BTC_RPC_HOST: host.docker.internal
+      BTC_RPC_PASS: poolpassword
+      BTC_RPC_PORT: "9030"
+      BTC_RPC_USER: pooluser
+      CKPOOL_STRATUM_HOST: host.docker.internal
+      CKPOOL_STRATUM_PORT: "7891"
+      JWT_SECRET: sajkdh9a23hf8923hfshdf23
+      NETWORK_IP: 127.0.0.1
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    image: ghcr.io/willitmod/fracattack-app-umbrel-dev:0.1.4
+    labels:
+      icon: https://raw.githubusercontent.com/WillItMod/5tratStore-dev/refs/heads/main/willitmod-dev-fracattack/icon.png
+    networks:
+      - frackatack_net
+    ports:
+      - mode: ingress
+        target: 3000
+        published: "21225"
+        protocol: tcp
+    restart: unless-stopped
+    user: 0:0
+    volumes:
+      - type: bind
+        source: /media/ZimaOS-HD/NodeData/frackatack
+        target: /data
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+        bind:
+          create_host_path: true
+  ckpool:
+    command:
+      - -k
+      - -L
+      - -c
+      - /data/pool/config/ckpool.conf
+    deploy:
+      resources:
+        limits:
+          memory: 4GB
+          cpus: "1.00"
+        reservations:
+          memory: 256MB
+          cpus: "0.00"
+      placement: {}
+    entrypoint: null
+    environment:
+      BTC_RPC_HOST: host.docker.internal
+      BTC_RPC_PASSWORD: poolpassword
+      BTC_RPC_PORT: "9030"
+      BTC_RPC_USER: pooluser
+      BTC_ZMQ_HASHBLOCK_PORT: "7030"
+      MAXDIFF: "0"
+      MINDIFF: "1"
+      PAYOUT_ADDRESS: bc1qp05vuzc5x4ym3cujh666xm6mzh0q6yqmkmtndl
+      STARTDIFF: "16"
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    image: ghcr.io/willitmod/docker-ckpool-solo:590fb2a
+    labels:
+      icon: https://raw.githubusercontent.com/WillItMod/5tratStore-dev/refs/heads/main/willitmod-dev-fracattack/icon.png
+    networks:
+      - frackatack_net
+    ports:
+      - mode: ingress
+        target: 3333
+        published: "7891"
+        protocol: tcp
+    restart: unless-stopped
+    user: 0:0
+    volumes:
+      - type: bind
+        source: /media/ZimaOS-HD/NodeData/frackatack
+        target: /data
+        bind:
+          create_host_path: true
+x-casaos:
+  author: WVK2017
+  category: Crypto
+  hostname: ""
+  icon: https://raw.githubusercontent.com/WillItMod/5tratStore-dev/refs/heads/main/willitmod-dev-fracattack/icon.png
+  index: /
+  is_uncontrolled: false
+  main: app
+  port_map: "21225"
+  scheme: http
+  store_app_id: compose-161dcc14db4ab865
+  title:
+    custom: Frackatack Solo Pool (ZimaOS Native)
