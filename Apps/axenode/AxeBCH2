@@ -1,0 +1,252 @@
+networks:
+  axebch_net:
+    name: compose-400e86a9720b7602_axebch_net
+    driver: bridge
+    ipam: {}
+    external: false
+services:
+  app:
+    command: null
+    container_name: bch2_app
+    depends_on:
+      bch2:
+        condition: service_started
+        required: true
+      init_permissions:
+        condition: service_completed_successfully
+        required: true
+    deploy:
+      resources:
+        limits:
+          memory: 4GB
+          cpus: "1.00"
+        reservations:
+          memory: 256MB
+          cpus: "0.00"
+      placement: {}
+    entrypoint: null
+    environment:
+      APP_CHANNEL: DEV
+      APP_COMPOSE_PROJECT: axebch2
+      APP_ID: willitmod-dev-axebch2
+      APP_RELEASE_PHASE: ALPHA
+      APP_SELF_RESTART_ENABLED: "1"
+      APP_VERSION: 0.2.0.3-dev
+      BCH2_NODE_IMAGE: ghcr.io/willitmod/axebch2-node:0.1.33-dev
+      BCH2_RPC_HOST: bch2
+      BCH2_RPC_PASS: GEHEIM_WACHTWOORD_HIER
+      BCH2_RPC_PORT: "8342"
+      BCH2_RPC_USER: bch2
+      CKPOOL_IMAGE: ghcr.io/willitmod/axebch2-ckpool:0.1.33-dev
+      CKPOOL_STRATUM_HOST: ckpool
+      CKPOOL_STRATUM_PORT: "3333"
+      JWT_SECRET: WILLEKEURIGE_REEKS_TEKST_HIER
+      NETWORK_IP: 127.0.0.1
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - python -c "import sys, urllib.request;
+          r=urllib.request.urlopen('http://127.0.0.1:3000/api/about',
+          timeout=3); sys.exit(0 if r.status == 200 else 1)"
+      timeout: 5s
+      interval: 15s
+      retries: 20
+      start_period: 1m30s
+    image: ghcr.io/willitmod/axebch2-app:0.2.0.3-dev
+    labels:
+      icon: https://raw.githubusercontent.com/WillItMod/5tratStore-dev/refs/heads/main/willitmod-dev-axebch2/icon.png
+    networks:
+      - axebch_net
+    ports:
+      - mode: ingress
+        target: 3000
+        published: "8095"
+        protocol: tcp
+    restart: unless-stopped
+    user: 1000:1000
+    volumes:
+      - type: bind
+        source: /DATA/AppData/axebch2/data
+        target: /data
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+        bind:
+          create_host_path: true
+  bch2:
+    command: null
+    container_name: bch2_node
+    depends_on:
+      init_permissions:
+        condition: service_completed_successfully
+        required: true
+    deploy:
+      resources:
+        limits:
+          memory: 4GB
+          cpus: "1.00"
+        reservations:
+          memory: 256MB
+          cpus: "0.00"
+      placement: {}
+    entrypoint: null
+    environment:
+      BOOTSTRAP_CONNECTNODES: ""
+      DB_CACHE: "256"
+      EXTERNAL_IP: 127.0.0.1
+      FORCE_IPV4_BIND: "1"
+      MAX_MEMPOOL: "64"
+      NETWORK: mainnet
+      ONE_TIME_FULL_RESYNC_KEY: bitcoincashii-shadow-chain-20260413
+      ONE_TIME_FULL_RESYNC_REQUIRE_EXISTING_DATA: "1"
+      ONE_TIME_REINDEX_KEY: bitcoincashii-v27.0.2
+      ONE_TIME_REINDEX_REQUIRE_EXISTING_DATA: "1"
+      P2P_PORT: "8339"
+      PEER_WATCHDOG_INTERVAL: "30"
+      PEER_WATCHDOG_MIN_CONNECTIONS: "1"
+      PRUNE: "0"
+      RPC_PASSWORD: GEHEIM_WACHTWOORD_HIER
+      RPC_PORT: "8342"
+      RPC_THREADS: "4"
+      RPC_USER: bch2
+      TX_INDEX: "0"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - bitcoincashII-cli -datadir=/data/node -rpcuser="" -rpcpassword=""
+          getblockchaininfo >/dev/null 2>&1
+      timeout: 10s
+      interval: 30s
+      retries: 20
+      start_period: 2m0s
+    image: ghcr.io/willitmod/axebch2-node:0.1.33-dev
+    labels:
+      icon: https://raw.githubusercontent.com/WillItMod/5tratStore-dev/refs/heads/main/willitmod-dev-axebch2/icon.png
+    networks:
+      - axebch_net
+    ports:
+      - mode: ingress
+        target: 8339
+        published: "8339"
+        protocol: tcp
+    restart: unless-stopped
+    stop_grace_period: 15m30s
+    volumes:
+      - type: bind
+        source: /DATA/AppData/axebch2/data/node
+        target: /data/node
+        bind:
+          create_host_path: true
+  ckpool:
+    command:
+      - -k
+      - -L
+      - -c
+      - /data/pool/config/ckpool.conf
+    container_name: bch2_ckpool
+    depends_on:
+      bch2:
+        condition: service_started
+        required: true
+      init_permissions:
+        condition: service_completed_successfully
+        required: true
+    deploy:
+      resources:
+        limits:
+          memory: 4GB
+          cpus: "1.00"
+        reservations:
+          memory: 256MB
+          cpus: "0.00"
+      placement: {}
+    entrypoint: null
+    environment:
+      BCH2_RPC_HOST: bch2
+      BCH2_RPC_PASSWORD: GEHEIM_WACHTWOORD_HIER
+      BCH2_RPC_PORT: "8342"
+      BCH2_RPC_USER: bch2
+      BCH2_ZMQ_HASHBLOCK_PORT: "28342"
+      MAXDIFF: "0"
+      MINDIFF: "1"
+      PAYOUT_ADDRESS: bitcoincashii:qq8awdr20tx3rvtjalqep2z6kn5wupe77uqp3csvzk
+      STARTDIFF: "16"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pid=$(cat /tmp/ckpool/main.pid 2>/dev/null || true); [ -n "" ] && kill
+          -0 "" 2>/dev/null
+      timeout: 5s
+      interval: 15s
+      retries: 20
+      start_period: 45s
+    image: ghcr.io/willitmod/axebch2-ckpool:0.1.33-dev
+    labels:
+      icon: https://raw.githubusercontent.com/WillItMod/5tratStore-dev/refs/heads/main/willitmod-dev-axebch2/icon.png
+    networks:
+      - axebch_net
+    ports:
+      - mode: ingress
+        target: 3333
+        published: "9265"
+        protocol: tcp
+    restart: unless-stopped
+    stop_grace_period: 30s
+    user: 1000:1000
+    volumes:
+      - type: bind
+        source: /DATA/AppData/axebch2/data/pool
+        target: /data/pool
+        bind:
+          create_host_path: true
+  init_permissions:
+    command:
+      - /bin/sh
+      - -ec
+      - >-
+        set -eu
+
+        mkdir -p /data/ui/state /data/node /data/pool/config /data/pool/www/pool
+        /data/pool/www/users
+
+        chown -R 1000:1000 /data/ui /data/node /data/pool || true
+
+        chmod -R ug+rwX /data/ui /data/node /data/pool || true
+    deploy:
+      resources:
+        limits:
+          memory: 4GB
+          cpus: "1.00"
+        reservations:
+          memory: 256MB
+          cpus: "0.00"
+      placement: {}
+    entrypoint: null
+    image: alpine:3.22.1
+    labels:
+      icon: https://raw.githubusercontent.com/WillItMod/5tratStore-dev/refs/heads/main/willitmod-dev-axebch2/icon.png
+    networks:
+      - axebch_net
+    restart: no
+    volumes:
+      - type: bind
+        source: /DATA/AppData/axebch2/data
+        target: /data
+        bind:
+          create_host_path: true
+x-casaos:
+  author: WVK2017
+  category: Crypto
+  hostname: ""
+  icon: https://raw.githubusercontent.com/WillItMod/5tratStore-dev/refs/heads/main/willitmod-dev-axebch2/icon.png
+  index: /
+  is_uncontrolled: false
+  main: init_permissions
+  port_map: "8095"
+  scheme: http
+  store_app_id: compose-400e86a9720b7602
+  title:
+    custom: AxeBch2 Dev
+    en_US: AxeBch2 Dev
