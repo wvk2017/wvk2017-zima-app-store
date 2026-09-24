@@ -1,0 +1,160 @@
+networks:
+  axebch-net:
+    name: compose-74277d876ffcc3ce_axebch-net
+    driver: bridge
+    ipam: {}
+    external: false
+services:
+  app:
+    command: null
+    container_name: axebch-dashboard
+    depends_on:
+      bchn:
+        condition: service_started
+        required: true
+      ckpool:
+        condition: service_started
+        required: true
+    deploy:
+      resources:
+        limits:
+          memory: 4GB
+          cpus: "1.00"
+        reservations:
+          memory: 256MB
+          cpus: "0.00"
+      placement: {}
+    entrypoint: null
+    environment:
+      APP_VERSION: 0.9.18
+      BCH_RPC_HOST: bchn
+      BCH_RPC_PASS: poolpassword
+      BCH_RPC_PORT: "28332"
+      BCH_RPC_USER: pooluser
+      CKPOOL_STATUS_DIR: /data/pool/www/pool
+      NETWORK_IP: bchn
+      STATIC_DIR: /app/static
+    image: ghcr.io/willitmod/axebch-app-umbrel-dev:0.9.18
+    labels:
+      icon: https://raw.githubusercontent.com/WillItMod/5tratStore-main/refs/heads/main/willitmod-dev-bch/icon.png
+    networks:
+      - axebch-net
+    ports:
+      - mode: ingress
+        target: 3000
+        published: "3009"
+        protocol: tcp
+    restart: on-failure
+    stop_grace_period: 30s
+    user: 0:0
+    volumes:
+      - type: bind
+        source: /media/ZimaOS-HD/NodeData/axebch/pool/www
+        target: /data/pool/www
+        bind:
+          create_host_path: true
+  bchn:
+    command:
+      - bitcoind
+      - -datadir=/data
+      - -printtoconsole
+      - -server=1
+      - -rpcbind=0.0.0.0
+      - -rpcport=28332
+      - -rpcallowip=0.0.0.0/0
+      - -rpcuser=pooluser
+      - -rpcpassword=poolpassword
+      - -zmqpubhashblock=tcp://0.0.0.0:28334
+    container_name: axebch-node
+    deploy:
+      resources:
+        limits:
+          memory: 4GB
+          cpus: "1.00"
+        reservations:
+          memory: 256MB
+          cpus: "0.00"
+      placement: {}
+    entrypoint: null
+    image: ghcr.io/willitmod/bitcoin-cash-node:v29.0.0-wm3
+    labels:
+      icon: https://raw.githubusercontent.com/WillItMod/5tratStore-main/refs/heads/main/willitmod-dev-bch/icon.png
+    networks:
+      - axebch-net
+    restart: unless-stopped
+    stop_grace_period: 15m30s
+    user: 0:0
+    volumes:
+      - type: bind
+        source: /media/ZimaOS-HD/NodeData/axebch/node
+        target: /data
+        bind:
+          create_host_path: true
+  ckpool:
+    command: null
+    container_name: axebch-ckpool
+    depends_on:
+      bchn:
+        condition: service_started
+        required: true
+    deploy:
+      resources:
+        limits:
+          memory: 4GB
+          cpus: "1.00"
+        reservations:
+          memory: 256MB
+          cpus: "0.00"
+      placement: {}
+    entrypoint:
+      - /bin/sh
+      - -c
+      - >
+        rm -f /config/ckpool.pid 2>/dev/null || true
+
+        rm -f /config/ckpool.conf 2>/dev/null || true
+
+        mkdir -p /config/www/pool /config/www/users
+
+        printf '{\n  "btcd": [\n    {\n      "url": "bchn:28332",\n      "auth":
+        "pooluser",\n      "pass": "poolpassword",\n      "notify":
+        true\n    }\n  ],\n  "btcaddress":
+        "1GqEqYbvBMF9cTF4zAyCHAgfSCZgtpFsQL",\n  "btcsig": "/mined by Wvk88 on
+        AxeBch ZimaOS/",\n  "mindiff": 64,\n  "startdiff": 1024,\n  "maxdiff":
+        0,\n  "logdir": "/config/www",\n  "webdir":
+        "/config/www/pool",\n  "userdir": "/config/www/users",\n  "zmqblock":
+        "tcp://bchn:28334"\n}\n' > /config/ckpool.conf
+
+        exec ckpool -k -B -L -c /config/ckpool.conf
+    image: ghcr.io/willitmod/wim-solo-ckpool:0.8.3-rc1-590fb2a
+    labels:
+      icon: https://raw.githubusercontent.com/WillItMod/5tratStore-main/refs/heads/main/willitmod-dev-bch/icon.png
+    networks:
+      - axebch-net
+    ports:
+      - mode: ingress
+        target: 3333
+        published: "4567"
+        protocol: tcp
+    restart: unless-stopped
+    stop_grace_period: 30s
+    user: 0:0
+    volumes:
+      - type: bind
+        source: /media/ZimaOS-HD/NodeData/axebch/pool
+        target: /config
+        bind:
+          create_host_path: true
+x-casaos:
+  architectures:
+    - amd64
+  hostname: ""
+  icon: https://raw.githubusercontent.com/WillItMod/5tratStore-main/refs/heads/main/willitmod-dev-bch/icon.png
+  index: /
+  is_uncontrolled: false
+  main: app
+  port_map: "3009"
+  scheme: http
+  title:
+    custom: AxeBCH Solo Mining Stack
+    en_us: AxeBCH Solo Mining Stack
