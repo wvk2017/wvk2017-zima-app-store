@@ -1,0 +1,230 @@
+networks:
+  axedgb_net:
+    name: compose-d471fc5397a8c6e9_axedgb_net
+    driver: bridge
+    ipam: {}
+    external: false
+services:
+  app:
+    command: null
+    depends_on:
+      dgbd:
+        condition: service_started
+        required: true
+      init_permissions:
+        condition: service_completed_successfully
+        required: true
+    deploy:
+      resources:
+        limits:
+          memory: 4GB
+          cpus: "1.00"
+        reservations:
+          memory: 256MB
+          cpus: "0.00"
+      placement: {}
+    entrypoint: null
+    environment:
+      APP_CHANNEL: DEV
+      APP_COMPOSE_PROJECT: axedgb
+      APP_ID: willitmod-dev-axedgb
+      APP_RELEASE_PHASE: ALPHA
+      APP_SELF_RESTART_ENABLED: "1"
+      APP_VERSION: 0.9.181
+      DGB_NODE_IMAGE: ghcr.io/willitmod/axedgb-node:0.9.181
+      DGB_RPC_HOST: dgbd
+      DGB_RPC_PASS: f153607db17922314e1890f10da6a5226e44783507e9cf0152fa0953952d4c4a
+      DGB_RPC_PORT: "14022"
+      DGB_RPC_USER: dgb
+      JWT_SECRET: d8f29as7d923hfshf29
+      NETWORK_IP: 127.0.0.1
+      POOL_IMAGE: ghcr.io/willitmod/axedgb-pool:0.9.181
+      POOL_STRATUM_HOST: pool
+      POOL_STRATUM_PORT: "3333"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - python -c "import sys, urllib.request;
+          r=urllib.request.urlopen('http://127.0.0', timeout=3); sys.exit(0 if
+          r.status == 200 else 1)"
+      timeout: 5s
+      interval: 15s
+      retries: 20
+      start_period: 1m30s
+    image: ghcr.io/willitmod/axedgb-app:0.9.181
+    labels:
+      icon: https://raw.githubusercontent.com/WillItMod/5tratStore-main/refs/heads/main/willitmod-dev-dgb/icon.png
+    networks:
+      - axedgb_net
+    ports:
+      - mode: ingress
+        target: 3000
+        published: "21230"
+        protocol: tcp
+    restart: unless-stopped
+    user: 1000:1000
+    volumes:
+      - type: bind
+        source: /media/ZimaOS-HD/NodeData/axedgb
+        target: /data
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+        bind:
+          create_host_path: true
+  dgbd:
+    command:
+      - digibyted
+      - -datadir=/data/node
+      - -server=1
+      - -rpcuser=dgb
+      - -rpcpassword=f153607db17922314e1890f10da6a5226e44783507e9cf0152fa0953952d4c4a
+      - -rpcport=14022
+      - -rpcbind=0.0.0.0
+      - -rpcallowip=0.0.0.0/0
+      - -prune=2000
+      - -txindex=0
+      - -zmqpubhashblock=tcp://0.0.0.0:28344
+      - -rpcworkqueue=1024
+      - -rpcthreads=32
+      - -reindex
+    depends_on:
+      init_permissions:
+        condition: service_completed_successfully
+        required: true
+    deploy:
+      resources:
+        limits:
+          memory: 4GB
+          cpus: "1.00"
+        reservations:
+          memory: 256MB
+          cpus: "0.00"
+      placement: {}
+    entrypoint: null
+    image: ghcr.io/willitmod/axedgb-core:0.9.181
+    labels:
+      icon: https://raw.githubusercontent.com/WillItMod/5tratStore-main/refs/heads/main/willitmod-dev-dgb/icon.png
+    networks:
+      - axedgb_net
+    ports:
+      - mode: ingress
+        target: 12024
+        published: "12024"
+        protocol: tcp
+    restart: unless-stopped
+    stop_grace_period: 15m30s
+    user: 1000:1000
+    volumes:
+      - type: bind
+        source: /media/ZimaOS-HD/NodeData/axedgb
+        target: /data
+        bind:
+          create_host_path: true
+  init_permissions:
+    command:
+      - /bin/sh
+      - -ec
+      - >-
+        set -eu
+
+        mkdir -p /data/ui/state /data/node /data/pool/config /data/pool/www/pool
+        /data/pool/www/users
+
+        chown -R 1000:1000 /data || true
+
+        chmod -R 777 /data || true
+    deploy:
+      resources:
+        limits:
+          memory: 4GB
+          cpus: "1.00"
+        reservations:
+          memory: 256MB
+          cpus: "0.00"
+      placement: {}
+    entrypoint: null
+    image: alpine:3.22.1
+    labels:
+      icon: https://raw.githubusercontent.com/WillItMod/5tratStore-main/refs/heads/main/willitmod-dev-dgb/icon.png
+    networks:
+      - axedgb_net
+    restart: no
+    volumes:
+      - type: bind
+        source: /media/ZimaOS-HD/NodeData/axedgb
+        target: /data
+        bind:
+          create_host_path: true
+  pool:
+    command:
+      - -k
+      - -L
+      - -c
+      - /data/pool/config/miningcore.json
+    depends_on:
+      dgbd:
+        condition: service_started
+        required: true
+      init_permissions:
+        condition: service_completed_successfully
+        required: true
+    deploy:
+      resources:
+        limits:
+          memory: 4GB
+          cpus: "1.00"
+        reservations:
+          memory: 256MB
+          cpus: "0.00"
+      placement: {}
+    entrypoint: null
+    environment:
+      DGB_RPC_HOST: dgbd
+      DGB_RPC_PASSWORD: f153607db17922314e1890f10da6a5226e44783507e9cf0152fa0953952d4c4a
+      DGB_RPC_PORT: "14022"
+      DGB_RPC_USER: dgb
+      DGB_ZMQ_HASHBLOCK_PORT: "28344"
+      MAXDIFF: "0"
+      MINDIFF: "1024"
+      PAYOUT_ADDRESS: CHANGEME_DGB_PAYOUT_ADDRESS
+      STARTDIFF: "4096"
+    image: ghcr.io/willitmod/axedgb-miningcore:axedgb-0.8.10-r26
+    labels:
+      icon: https://raw.githubusercontent.com/WillItMod/5tratStore-main/refs/heads/main/willitmod-dev-dgb/icon.png
+    networks:
+      - axedgb_net
+    ports:
+      - mode: ingress
+        target: 3333
+        published: "3333"
+        protocol: tcp
+      - mode: ingress
+        target: 3334
+        published: "3334"
+        protocol: tcp
+    restart: unless-stopped
+    stop_grace_period: 30s
+    user: 1000:1000
+    volumes:
+      - type: bind
+        source: /media/ZimaOS-HD/NodeData/axedgb/pool
+        target: /data/pool
+        bind:
+          create_host_path: true
+x-casaos:
+  author: WVK2017
+  category: Crypto
+  hostname: ""
+  icon: https://raw.githubusercontent.com/WillItMod/5tratStore-main/refs/heads/main/willitmod-dev-dgb/icon.png
+  index: /
+  is_uncontrolled: false
+  main: app
+  port_map: "21230"
+  scheme: http
+  store_app_id: compose-d471fc5397a8c6e9
+  title:
+    custom: AxeDGB Dev
+    en_US: AxeDGB Dev
