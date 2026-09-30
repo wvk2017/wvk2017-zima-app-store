@@ -1,0 +1,277 @@
+networks:
+  frackatack_net:
+    name: compose-custom_frackatack_net
+    driver: bridge
+    ipam: {}
+    external: false
+
+services:
+  app:
+    container_name: Frackatack_app
+    image: ghcr.io/willitmod/fracattack-app-umbrel-dev:0.1.4
+    deploy:
+      resources:
+        limits:
+          memory: 4GB
+          cpus: "1.00"
+        reservations:
+          memory: 256MB
+          cpus: "0.00"
+    environment:
+      APP_CHANNEL: ZIMAOS
+      APP_COMPOSE_PROJECT: frackatack
+      APP_ID: willitmod-dev-fracattack
+      APP_RELEASE_PHASE: ZIMAOS
+      APP_VERSION: 0.4.0
+      BTC_CKPOOL_IMAGE: ghcr.io/willitmod/docker-ckpool-solo:590fb2a
+      BTC_NODE_IMAGE: ghcr.io/willitmod/fracattack-fractald:0.4.0
+      # Verbinding maken met de nieuwe, geïntegreerde node container
+      BTC_RPC_HOST: Frackatack_node
+      BTC_RPC_PASS: poolpassword  # Wordt overschreven door het init-script met de app-password
+      BTC_RPC_PORT: "28342"
+      BTC_RPC_USER: fractal
+      CKPOOL_STRATUM_HOST: Frackatack_ckpool
+      CKPOOL_STRATUM_PORT: "3333"
+      JWT_SECRET: sajkdh9a23hf8923hfshdf23
+      NETWORK_IP: 127.0.0.1
+    labels:
+      icon: https://githubusercontent.com
+    networks:
+      - frackatack_net
+    ports:
+      - mode: ingress
+        target: 3000
+        published: "21225"
+        protocol: tcp
+    restart: unless-stopped
+    user: 0:0
+    volumes:
+      - type: bind
+        source: /media/ZimaOS-HD/NodeData/frackatack
+        target: /data
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+        bind:
+          create_host_path: true
+
+  ckpool:
+    container_name: Frackatack_ckpool
+    image: ghcr.io/willitmod/docker-ckpool-solo:590fb2a
+    command:
+      - -k
+      - -L
+      - -c
+      - /data/pool/config/ckpool.conf
+    deploy:
+      resources:
+        limits:
+          memory: 4GB
+          cpus: "1.00"
+        reservations:
+          memory: 256MB
+          cpus: "0.00"
+    environment:
+      BTC_RPC_HOST: Frackatack_node
+      BTC_RPC_PASSWORD: poolpassword
+      BTC_RPC_PORT: "28342"
+      BTC_RPC_USER: fractal
+      BTC_ZMQ_HASHBLOCK_PORT: "28345"
+      MAXDIFF: "0"
+      MINDIFF: "1"
+      PAYOUT_ADDRESS: bc1qg09gugv3kk2sv8svq7zewmt6ey00gppkctgtzk
+      STARTDIFF: "16"
+    labels:
+      icon: https://githubusercontent.com
+    networks:
+      - frackatack_net
+    ports:
+      - mode: ingress
+        target: 3333
+        published: "7891"
+        protocol: tcp
+    restart: unless-stopped
+    user: 0:0
+    volumes:
+      - type: bind
+        source: /media/ZimaOS-HD/NodeData/frackatack
+        target: /data
+        bind:
+          create_host_path: true
+
+  # INITIALISATIE SERVICE (Uit jouw Umbrel-configratie)
+  init:
+    container_name: Frackatack_init
+    image: alpine:3.22.1
+    networks:
+      - frackatack_net
+    volumes:
+      - /media/ZimaOS-HD/NodeData/frackatack:/data
+      - /media/ZimaOS-HD/NodeData/frackatack:/appdata
+    environment:
+      NETWORK_IP: 127.0.0.1
+      APPS_SUBNET: "127.0.0.1/16"
+      RPC_USER: "fractal"
+      RPC_PASSWORD: "poolpassword"
+      BTC_P2P_PORT: "28343"
+      BTC_RPC_PORT: "28342"
+      BTC_ZMQ_HASHBLOCK_PORT: "28345"
+      PAYOUT_ADDRESS: "bc1qg09gugv3kk2sv8svq7zewmt6ey00gppkctgtzk"
+      JWT_SECRET: "sajkdh9a23hf8923hfshdf23"
+    command:
+      - /bin/sh
+      - -ec
+      - |-
+        set -eu
+        apk add --no-cache bind-tools envsubst jq >/dev/null
+
+        if [ -n "$${JWT_SECRET:-}" ]; then
+          envfile="/appdata/.env"
+          tmp="/appdata/.env.tmp"
+          if [ -f "$$envfile" ]; then
+            grep -v '^JWT_SECRET=' "$$envfile" > "$$tmp" || true
+          else
+            : > "$$tmp"
+          fi
+          printf "JWT_SECRET=%s\n" "$$JWT_SECRET" >> "$$tmp"
+          chmod 600 "$$tmp" || true
+          mv "$$tmp" "$$envfile"
+        fi
+
+        mkdir -p /data/node /data/pool/config /data/pool/www/pool /data/pool/www/users
+        chmod +x /data/templates/fractald-entrypoint.sh /data/templates/ckpool-entrypoint.sh 2>/dev/null || true
+
+        if [ -f /data/templates/ckpool.conf.template ]; then
+          if grep -q '"auxd"' /data/templates/ckpool.conf.template; then
+            sed -i '/"auxd"[[:space:]]*:/,/^  ],/d' /data/templates/ckpool.conf.template || true
+          fi
+          sed -i '/"auxaddress"[[:space:]]*:/d' /data/templates/ckpool.conf.template || true
+        fi
+
+        touch /appdata/settings.yml
+
+        ensure_bitcoin_conf_line() {
+          line="$$1"
+          grep -qxF "$$line" /data/node/bitcoin.conf || echo "$$line" >> /data/node/bitcoin.conf
+        }
+
+        set_bitcoin_conf_key() {
+          key="$$1"
+          value="$$2"
+          if grep -Eq "^[#[:space:]]*$$key=" /data/node/bitcoin.conf; then
+            sed -i "s|^[#[:space:]]*$$key=.*|$$key=$$value|" /data/node/bitcoin.conf
+          else
+            echo "$$key=$$value" >> /data/node/bitcoin.conf
+          fi
+        }
+
+        refresh_fractal_seed_addnodes() {
+          for seed in x9.dnsseed-mainnet.fractalbitcoin.io x9.dnsseed-mainnet.unisat.io; do
+            dig +short A "$$seed" 2>/dev/null \
+              | awk '/^[0-9.]+$$/ { print }' \
+              | sort -u \
+              | while read -r ip; do
+                  [ -n "$$ip" ] || continue
+                  ensure_bitcoin_conf_line "addnode=$$ip:8333"
+                done
+          done
+        }
+
+        if [ ! -f /data/node/bitcoin.conf ]; then
+          if [ -f /data/templates/bitcoin.conf.template ]; then
+            envsubst < /data/templates/bitcoin.conf.template > /data/node/bitcoin.conf
+          else
+            echo "rpcuser=fractal" > /data/node/bitcoin.conf
+            echo "rpcpassword=poolpassword" >> /data/node/bitcoin.conf
+          fi
+        else
+          tmp_conf="/data/node/bitcoin.conf.tmp"
+          awk '
+            /^[[:space:]]*password123[[:space:]]*$/ { next }
+            { if (!seen[$0]++) print }
+          ' /data/node/bitcoin.conf > "$$tmp_conf" && mv "$$tmp_conf" /data/node/bitcoin.conf
+
+          set_bitcoin_conf_key 'listen' '1'
+          set_bitcoin_conf_key 'discover' '1'
+          set_bitcoin_conf_key 'maxconnections' '256'
+          set_bitcoin_conf_key 'port' "$${BTC_P2P_PORT}"
+
+          ensure_bitcoin_conf_line 'dnsseed=1'
+          ensure_bitcoin_conf_line 'fixedseeds=1'
+          ensure_bitcoin_conf_line 'forcednsseed=1'
+          ensure_bitcoin_conf_line 'seednode=x9.dnsseed-mainnet.fractalbitcoin.io'
+          ensure_bitcoin_conf_line 'seednode=x9.dnsseed-mainnet.unisat.io'
+          ensure_bitcoin_conf_line 'addnode=x9.dnsseed-mainnet.fractalbitcoin.io'
+          ensure_bitcoin_conf_line 'addnode=x9.dnsseed-mainnet.unisat.io'
+        fi
+        refresh_fractal_seed_addnodes
+
+        if [ ! -f /data/pool/config/ckpool.conf ]; then
+          if [ -f /data/templates/ckpool.conf.template ]; then
+            envsubst < /data/templates/ckpool.conf.template > /data/pool/config/ckpool.conf
+          fi
+        else
+          existing_addr="$$(grep -oE '\"btcaddress\"[[:space:]]*:[[:space:]]*\"[^\"]*\"' /data/pool/config/ckpool.conf | head -n 1 | cut -d: -f2- | tr -d ' \"' || true)"
+          needs_ckpool_regen=0
+          if ! jq -e . /data/pool/config/ckpool.conf >/dev/null 2>&1; then needs_ckpool_regen=1; fi
+          if ! grep -q '"btcaddress"' /data/pool/config/ckpool.conf; then needs_ckpool_regen=1; fi
+          if ! grep -q '"webdir"' /data/pool/config/ckpool.conf; then needs_ckpool_regen=1; fi
+          if ! grep -q '"userdir"' /data/pool/config/ckpool.conf; then needs_ckpool_regen=1; fi
+          if grep -q '"auxd"' /data/pool/config/ckpool.conf; then needs_ckpool_regen=1; fi
+          if grep -q '"auxaddress"' /data/pool/config/ckpool.conf; then needs_ckpool_regen=1; fi
+          case "$$existing_addr" in *\\*) needs_ckpool_regen=1 ;; esac
+          if [ "$$needs_ckpool_regen" -eq 1 ]; then
+            case "$$existing_addr" in
+              bc1*|1*|3*) if [ "$$existing_addr" != "CHANGEME_FRACTAL_PAYOUT_ADDRESS" ]; then export PAYOUT_ADDRESS="$$existing_addr"; fi ;;
+            esac
+            mv /data/pool/config/ckpool.conf "/data/pool/config/ckpool.conf.bak.$(date +%s 2>/dev/null || echo 0)" || true
+            if [ -f /data/templates/ckpool.conf.template ]; then
+              envsubst < /data/templates/ckpool.conf.template > /data/pool/config/ckpool.conf
+            fi
+          fi
+        fi
+
+        if [ ! -f /data/pool/config/ckpool.args ]; then
+          echo "-B" > /data/pool/config/ckpool.args
+        fi
+
+  # DE FRACTAL BITCOIN NODE (Uit jouw Umbrel-configuratie)
+  node:
+    container_name: Frackatack_node
+    image: ghcr.io/willitmod/fracattack-fractald:0.4.0
+    restart: unless-stopped
+    stop_grace_period: 15m30s
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    deploy:
+      resources:
+        limits:
+          memory: 8GB
+          cpus: "2.00"
+    networks:
+      - frackatack_net
+    ports:
+      - "28342:28342"  # RPC Poort voor app/ckpool verbinding
+      - "28343:28343"  # P2P Bitcoin netwerk poort
+      - "28345:28345"  # ZMQ Poort voor real-time mining meldingen
+    entrypoint: ["/bin/sh", "/fractald-entrypoint.sh"]
+    volumes:
+      - /media/ZimaOS-HD/NodeData/frackatack/node:/data
+      - /media/ZimaOS-HD/NodeData/frackatack/templates/fractald-entrypoint.sh:/fractald-entrypoint.sh:ro
+
+x-casaos:
+  author: WVK2017
+  category: Crypto
+  hostname: ""
+  icon: https://githubusercontent.com
+  index: /
+  is_uncontrolled: false
+  main: app
+  port_map: "21225"
+  scheme: http
+  store_app_id: compose-161dcc14db4ab865
+  title:
+    custom: Frackatack Solo Pool (ZimaOS Native)
