@@ -80,10 +80,10 @@ services:
       BTC_RPC_PORT: "28342"
       BTC_RPC_USER: fractal
       BTC_ZMQ_HASHBLOCK_PORT: "28345"
-      MAXDIFF: "0"
-      MINDIFF: "1"
+      MAXDIFF: "1048576"
+      MINDIFF: "2048"
       PAYOUT_ADDRESS: bc1qp05vuzc5x4ym3cujh666xm6mzh0q6yqmkmtndl
-      STARTDIFF: "16"
+      STARTDIFF: "8192"
     image: ghcr.io/willitmod/docker-ckpool-solo:590fb2a
     labels:
       icon: https://raw.githubusercontent.com/WillItMod/5tratStore-dev/refs/heads/main/willitmod-dev-fracattack/icon.png
@@ -94,6 +94,7 @@ services:
         target: 3333
         published: "7891"
         protocol: tcp
+    privileged: true
     restart: unless-stopped
     user: 0:0
     volumes:
@@ -112,6 +113,7 @@ services:
         mkdir -p /data/node /data/pool/config /data/pool/www/pool
         /data/pool/www/users
 
+        # Schrijf een kaarsrechte, stabiele bitcoin.conf met 10GB pruning limiet
         echo 'server=1' > /data/node/bitcoin.conf
 
         echo 'listen=1' >> /data/node/bitcoin.conf
@@ -142,34 +144,46 @@ services:
         echo 'addnode=x9.dnsseed-mainnet.unisat.io' >> /data/node/bitcoin.conf
 
 
-        echo '{' > /data/pool/config/ckpool.conf
+        # Schrijf de ckpool.conf exact volgens jouw gewenste structuur echo '{'
+        > /data/pool/config/ckpool.conf
 
-        echo '  "btchost": "Frackatack_node",' >> /data/pool/config/ckpool.conf
-
-        echo '  "btcport": 28342,' >> /data/pool/config/ckpool.conf
-
-        echo '  "btcuser": "fractal",' >> /data/pool/config/ckpool.conf
-
-        echo '  "btcpass": "poolpassword",' >> /data/pool/config/ckpool.conf
+        echo '  "bindaddress": "0.0.0.0",' >> /data/pool/config/ckpool.conf
 
         echo '  "btcaddress": "bc1qp05vuzc5x4ym3cujh666xm6mzh0q6yqmkmtndl",' >>
         /data/pool/config/ckpool.conf
 
-        echo '  "bindaddress": "0.0.0.0",' >> /data/pool/config/ckpool.conf
+        echo '  "btchost": "Frackatack_node",' >> /data/pool/config/ckpool.conf
+
+        echo '  "btcpass": "poolpassword",' >> /data/pool/config/ckpool.conf
+
+        echo '  "btcport": 28342,' >> /data/pool/config/ckpool.conf
+
+        echo '  "btcsig": "/FracAttack/",' >> /data/pool/config/ckpool.conf
+
+        echo '  "btcuser": "fractal",' >> /data/pool/config/ckpool.conf
+
+        echo '  "logdir": "/data/pool/www",' >> /data/pool/config/ckpool.conf
+
+        echo '  "maxdiff": 1048576,' >> /data/pool/config/ckpool.conf
+
+        echo '  "mindiff": 2048,' >> /data/pool/config/ckpool.conf
+
+        echo '  "startdiff": 8192,' >> /data/pool/config/ckpool.conf
 
         echo '  "stratumport": 3333,' >> /data/pool/config/ckpool.conf
 
-        echo '  "zmqblock": "tcp://Frackatack_node:28345",' >>
+        echo '  "userdir": "/data/pool/www/users",' >>
         /data/pool/config/ckpool.conf
+
+        echo '  "validated": true,' >> /data/pool/config/ckpool.conf
 
         echo '  "webdir": "/data/pool/www/pool",' >>
         /data/pool/config/ckpool.conf
 
-        echo '  "userdir": "/data/pool/www/users"' >>
+        echo '  "zmqblock": "tcp://Frackatack_node:28345"' >>
         /data/pool/config/ckpool.conf
 
         echo '}' >> /data/pool/config/ckpool.conf
-
 
         if [ ! -f /data/pool/config/ckpool.args ]; then
           echo "-B" > /data/pool/config/ckpool.args
@@ -198,7 +212,10 @@ services:
         bind:
           create_host_path: true
   node:
-    command: null
+    command:
+      - bitcoind
+      - -conf=/data/node/bitcoin.conf
+      - -datadir=/root/.bitcoin
     container_name: Frackatack_node
     depends_on:
       init:
@@ -237,6 +254,11 @@ services:
     user: 0:0
     volumes:
       - type: bind
+        source: /media/ZimaOS-HD/NodeData/frackatack
+        target: /data
+        bind:
+          create_host_path: true
+      - type: bind
         source: /media/ZimaOS-HD/NodeData/frackatack/node
         target: /root/.bitcoin
         bind:
@@ -249,5 +271,6 @@ x-casaos:
   main: app
   port_map: "21225"
   scheme: http
+  store_app_id: compose-03a1669703dc805e
   title:
     custom: Frackatack
