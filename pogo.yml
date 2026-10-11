@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  pogolo:
+    image: 0xf0xx0/pogolo:latest
+    container_name: pgl
+    restart: unless-stopped
+    ports:
+      - "5661:5661" # Stratum mining poort voor je miners
+      - "5662:5662" # Grafische WebUI poort openstellen
+    entrypoint: [ "/bin/sh", "-c" ]
+    command: 
+      - |
+        mkdir -p /root/.config/pogolo
+        printf '[backend]\nhost = "192.168.178.30:9030"\nrpcauth = "pooluser:poolpassword"\n\n[pogolo]\nhost = "0.0.0.0"\n' > /root/.config/pogolo/pogolo.toml
+        exec /pogolo --conf /root/.config/pogolo/pogolo.toml
+    volumes:
+      - /media/ZimaOS-HD/AppData/pogolo:/root/.config/pogolo
+
+x-casaos:
+  architectures:
+    - amd64
+  author: 0xf0xx0
+  category: Mining
+  description:
+    en_us: Solo db-less Fractal mining pool gekoppeld aan de actieve Fractal node.
+  icon: https://cryptorank.io
+  main: pgl
+  port_map: "5662" # Zorgt dat de ZimaOS app-tegel nu direct linkt naar de juiste webpoort 5662
+  title:
+    custom: Pogolo Mining Pool (FB)
+    en_us: Pogolo Mining Pool (FB)
