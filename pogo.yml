@@ -1,32 +1,105 @@
-version: '3.8'
-
 services:
   pogolo:
-    image: 0xf0xx0/pogolo:latest
-    container_name: pgl
-    restart: unless-stopped
-    ports:
-      - "5661:5661" # Stratum mining poort voor je miners
-      - "5662:5662" # Grafische WebUI poort openstellen
-    entrypoint: [ "/bin/sh", "-c" ]
-    command: 
-      - |
+    command:
+      - >
         mkdir -p /root/.config/pogolo
-        printf '[backend]\nhost = "192.168.178.30:9030"\nrpcauth = "pooluser:poolpassword"\n\n[pogolo]\nhost = "0.0.0.0"\n' > /root/.config/pogolo/pogolo.toml
-        exec /pogolo --conf /root/.config/pogolo/pogolo.toml
-    volumes:
-      - /media/ZimaOS-HD/AppData/pogolo:/root/.config/pogolo
 
+        printf '[backend]\nhost = "192.168.178.30:9030"\nrpcauth =
+        "pooluser:poolpassword"\n\n[pogolo]\nhost = "0.0.0.0"\n' >
+        /root/.config/pogolo/pogolo.toml
+
+        exec /pogolo --conf /root/.config/pogolo/pogolo.toml --logfile
+        /root/.config/pogolo/pogolo.log
+    container_name: pgl
+    deploy:
+      resources:
+        limits:
+          memory: 4GB
+          cpus: "1.00"
+        reservations:
+          memory: 256MB
+          cpus: "0.00"
+      placement: {}
+    entrypoint:
+      - /bin/sh
+      - -c
+    image: 0xf0xx0/pogolo:latest
+    labels:
+      icon: https://cryptorank.io
+    network_mode: bridge
+    ports:
+      - mode: ingress
+        target: 5661
+        published: "5661"
+        protocol: tcp
+      - mode: ingress
+        target: 5662
+        published: "5662"
+        protocol: tcp
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: /media/ZimaOS-HD/AppData/pogolo
+        target: /root/.config/pogolo
+        bind:
+          create_host_path: true
+  pogolo-webui:
+    command:
+      - /bin/sh
+      - -c
+      - " mkdir -p /etc/nginx/conf.d && echo 'server { listen 80; location / {
+        root /usr/share/nginx/html; index index.html; } location /pogolo.log {
+        alias /pogolo_logs/pogolo.log; default_type text/plain; } }' >
+        /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;' "
+    container_name: pgl_webui
+    deploy:
+      resources:
+        limits:
+          memory: 4GB
+          cpus: "1.00"
+        reservations:
+          memory: 256MB
+          cpus: "0.00"
+      placement: {}
+    entrypoint: null
+    image: nginx:alpine
+    labels:
+      icon: https://cryptorank.io
+    network_mode: bridge
+    ports:
+      - mode: ingress
+        target: 80
+        published: "5665"
+        protocol: tcp
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: /media/ZimaOS-HD/AppData/pogolo-webui
+        target: /usr/share/nginx/html
+        read_only: true
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /media/ZimaOS-HD/AppData/pogolo
+        target: /pogolo_logs
+        read_only: true
+        bind:
+          create_host_path: true
 x-casaos:
   architectures:
     - amd64
-  author: 0xf0xx0
+  author: WantClue & 0xf0xx0
   category: Mining
   description:
-    en_us: Solo db-less Fractal mining pool gekoppeld aan de actieve Fractal node.
+    en_us: Solo db-less Fractal mining pool met log-sharing WebUI stats.
+  hostname: ""
   icon: https://cryptorank.io
-  main: pgl
-  port_map: "5662" # Zorgt dat de ZimaOS app-tegel nu direct linkt naar de juiste webpoort 5662
+  index: /
+  is_uncontrolled: false
+  main: pogolo-webui
+  port_map: "5665"
+  scheme: http
+  store_app_id: compose-a264945c35455b44
   title:
     custom: Pogolo Mining Pool (FB)
     en_us: Pogolo Mining Pool (FB)
