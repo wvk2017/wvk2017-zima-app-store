@@ -10,7 +10,7 @@ services:
       - "7033:7033"
       - "9033:9033"
       - "8340:8340"
-    command: "/usr/bin/bitcoind -printtoconsole -server -prune=550 -wallet=default -zmqpubhashblock=tcp://127.0.0.1:7033 -rpcbind=0.0.0.0 -rpcport=9033 -rpcallowip=0.0.0.0/0 -port=8340 -rpcuser=pooluser -rpcpassword=poolpassword"
+    command: "/usr/bin/bitcoind -printtoconsole -server -txindex=0 -prune=550 -disablewallet=1 -zmqpubhashblock=tcp://127.0.0.1:7033 -rpcbind=0.0.0.0 -rpcport=9033 -rpcallowip=0.0.0.0/0 -port=8340 -rpcuser=pooluser -rpcpassword=poolpassword"
     x-casaos:
       volumes:
         - container: /root/.bitcoin
