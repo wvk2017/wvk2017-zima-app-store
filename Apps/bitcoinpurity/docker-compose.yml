@@ -1,28 +1,36 @@
-name: wvk2017-bitcoinpurity
 services:
   app:
+    command: /usr/bin/bitcoind -datadir=/root/.bitcoin -printtoconsole -server
+      -prune=550 -wallet=default -zmqpubhashblock=tcp://127.0.0.1:7033
+      -rpcbind=0.0.0.0 -rpcport=9033 -rpcallowip=0.0.0.0/0 -rpcuser=pooluser
+      -rpcpassword=poolpassword
     container_name: btc1
     image: wvk2017/nodes:btc1
+    network_mode: bridge
+    ports:
+      - 7033:7033
+      - 9033:9033
     restart: always
     volumes:
-      - /media/ZimaOS-HD/btc1:/root/.bitcoin
-    ports:
-      - "7033:7033"
-      - "9033:9033"
-    command: "/usr/bin/bitcoind -printtoconsole -server -prune=550 -wallet=default -zmqpubhashblock=tcp://127.0.0.1:7033 -rpcbind=0.0.0.0 -rpcport=9033 -rpcallowip=0.0.0.0/0 -rpcuser=pooluser -rpcpassword=poolpassword"
+      - /media/ZimaOS-HD/NodeData/btc1:/root/.bitcoin
 x-casaos:
   architectures:
     - amd64
-  main: app
+  author: wvk2017
+  category: wvk2017
   description:
-    en_us: Bitcoin-Purity (btc1) Cryptocurrency Node. Can be used in conjunction with Miningcore Apps to solo mine.
+    en_us: Bitcoin-Purity (btc1) Cryptocurrency Node. Can be used in conjunction
+      with Miningcore Apps to solo mine.
+  developer: wvk2017
+  hostname: ""
+  icon: https://btc1.molepool.com/assets/coin-hBAokysi.png
+  index: /
+  main: app
+  port_map: "8888"
+  scheme: http
   tagline:
     en_us: Bitcoin-Purity (btc1) Cryptocurrency Node.
-  developer: wvk2017
-  author: wvk2017
-  icon: https://btc1.molepool.com/assets/coin-hBAokysi.png
   thumbnail: ""
   title:
+    custom: Bitcoin-Purity (btc1) Cryptocurrency Node
     en_us: Bitcoin-Purity (btc1) Cryptocurrency Node
-  category: wvk2017
-  port_map: "8888"
