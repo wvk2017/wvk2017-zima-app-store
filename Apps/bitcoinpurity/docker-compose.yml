@@ -2,14 +2,14 @@ name: wvk2017-bitcoinpurity
 services:
   app:
     container_name: bitcoinpurity
-    image: wvk2017/nodes:bitcoinpurity
+    image: wvk2017/nodes:btc1
     restart: always
     volumes:
       - /media/ZimaOS-HD/NodeData/bitcoinpurity:/root/.bitcoinpurity
     ports:
       - "7033:7033"
       - "9033:9033"
-    command: "/usr/bin/bitcoinpurityd -datadir=/data/node -printtoconsole -server -zmqpubhashblock=tcp://127.0.0.1:7033 -rpcbind=0.0.0.0 -rpcport=9033 -rpcallowip=0.0.0.0/0 -rpcuser=pooluser -rpcpassword=poolpassword -getblockchaininfo >/dev/null 2>&1"
+    command: "/usr/bin/bitcoind -datadir=/data/node -printtoconsole -server -zmqpubhashblock=tcp://127.0.0.1:7033 -rpcbind=0.0.0.0 -rpcport=9033 -rpcallowip=0.0.0.0/0 -rpcuser=pooluser -rpcpassword=poolpassword -getblockchaininfo >/dev/null 2>&1"
 x-casaos:
   architectures:
     - amd64
