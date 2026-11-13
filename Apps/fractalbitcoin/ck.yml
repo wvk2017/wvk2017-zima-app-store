@@ -1,0 +1,37 @@
+services:
+  ckstats-fractal:
+    container_name: ckstats-fractal
+    depends_on:
+      - fractal-ckpool
+    environment:
+      RPCHOST: 192.168.178.161
+      RPCPASSWORD: poolpassword
+      RPCPORT: "9030"
+      RPCUSER: pooluser
+    image: magicdude4eva/btc-ckstats:latest
+    network_mode: bridge
+    ports:
+      - 4010:3000
+    restart: unless-stopped
+    volumes:
+      - /media/ZimaOS-HD/AppData/ckpool-fb/logs:/logs
+      - /media/ZimaOS-HD/AppData/ckpool-fb/ckstats-db:/var/lib/postgresql/data
+  fractal-ckpool:
+    container_name: fractal-ckpool
+    image: bitcryptic/ckpool-solo:latest
+    network_mode: bridge
+    ports:
+      - 3334:3333
+      - 4029:4028
+    restart: unless-stopped
+    volumes:
+      - /media/ZimaOS-HD/AppData/ckpool-fb/ckpool-conf:/config
+      - /media/ZimaOS-HD/AppData/ckpool-fb/logs:/logs
+x-casaos:
+  hostname: ""
+  index: /
+  main: ckstats-fractal
+  port_map: "4010"
+  scheme: http
+  title:
+    custom: ckpool fb
