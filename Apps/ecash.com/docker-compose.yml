@@ -1,0 +1,28 @@
+name: wvk2017-ecash
+services:
+  app:
+    container_name: ecx
+    image: ghcr.io/ecash-com/bitcoin:latest
+    restart: always
+    volumes:
+      - /media/ZimaOS-HD/NodeData/ecx:/root/.bitcoin
+    ports:
+      - "7035:7035"
+      - "9035:9035"
+    command: "/usr/bin/bitcoind -printtoconsole -server -txindex=0 -prune=2000 -disablewallet=1 -zmqpubhashblock=tcp://127.0.0.1:7035 -rpcbind=0.0.0.0 -rpcport=9035 -rpcallowip=0.0.0.0/0 -rpcuser=pooluser -rpcpassword=poolpassword -addnode=seed.ecash.ninja -addnode=seed.bip300.xyz -addnode=seed.ecash.drivecha.in -addnode=seed.ecash.zuexeuz.net -addnode=seed.ecash.eu.com"
+x-casaos:
+  architectures:
+    - amd64
+  main: app
+  description:
+    en_us: Ecash.com (ECX) Cryptocurrency Node. Can be used in conjunction with Miningcore Apps to solo mine.
+  tagline:
+    en_us: Ecash.com (ECX) Cryptocurrency Node.
+  developer: wvk2017
+  author: wvk2017
+  icon: https://avatars.githubusercontent.com/u/292974767?s=200&v=4
+  thumbnail: ""
+  title:
+    en_us: Ecash.com (ECX) Cryptocurrency Node
+  category: WVK2017
+  port_map: "8888"
